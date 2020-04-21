@@ -231,7 +231,7 @@ So one probably directory structure that you could have to support the playbook 
 ├── ocp_libvirt_ipi.yaml
 └── roles
     └── ocp_libvirt_ipi
-        └──ocp_libvirt_ipi.yaml
+        └── ...
 ...
 ```
 
