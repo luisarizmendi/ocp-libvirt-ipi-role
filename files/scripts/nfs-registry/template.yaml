@@ -1,0 +1,29 @@
+kind: Template
+apiVersion: v1
+metadata:
+  annotations:
+    tags: nfsregistry
+  name: nfsregistry
+objects:
+- kind: PersistentVolume
+  apiVersion: v1
+  metadata:
+    name: nfs-registry-storage
+  spec:
+    accessModes:
+    - ReadWriteMany
+    capacity:
+      storage: "100Gi"
+    nfs:
+      path: "${NFS_PATH}"
+      server: "${NFS_SERVER}"
+    persistentVolumeReclaimPolicy: Recycle
+parameters:
+  - name: NFS_SERVER
+    displayName: NFS Server IP
+    description: IP of the NFS server
+    required: true
+  - name: NFS_PATH
+    displayName: NFS Path
+    description: Path on the NFS server
+    required: true

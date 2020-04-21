@@ -1,0 +1,265 @@
+---
+
+################ 
+# We need to compile with libvirt support since it's not included by default (it's in development)
+- name: Compile OpenShift installer (libvirt is in development)
+  when: ocp_prepare == "true"
+  tags: install
+  block:
+    - name: Install dependecies
+      become: true
+      yum:
+        name:
+          - golang-bin
+          - gcc-c++
+          - libvirt-devel
+          - git
+        state: present
+
+    - name: Clone Openshift installer repo
+      git:
+        repo: "{{ ocp_openshift_installer_repo }}"
+        version: "{{ ocp_git_branch }}"
+        dest: "{{ ansible_env.HOME }}/go/src/github.com/openshift/installer"
+        clone: yes
+        force: yes
+
+
+
+    - name: Change timeouts to 180m
+      shell: |
+        sed -i 's/apiTimeout := 20/apiTimeout := 180/g' {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
+        sed -i 's/timeout := 40/timeout := 180/g' {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
+        sed -i 's/timeout := 30/timeout := 180/g' {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
+        sed -i 's/consoleRouteTimeout := 10/consoleRouteTimeout := 60/g' {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
+
+
+    - name: FIX master disk in code (Right now there is no other way)
+      shell: |
+        SIZE=$(({{ ocp_master_disk }}*1073741824))
+        sed -i "s/resource \"libvirt_volume\" \"master\" {/resource \"libvirt_volume\" \"master\" {\n  size           = ${SIZE}/g" {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/data/data/libvirt/main.tf
+
+
+    - name: Build the Openshift installer with libvirt support
+      shell: |
+        cd {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/
+        #git reset --hard origin/{{ ocp_git_branch }}
+        TAGS=libvirt hack/build.sh
+
+################
+
+
+- name: Prepare OpenShift installation
+  when: ocp_prepare == "true"
+  tags: install
+  block:
+    - name: Create installation directory
+      file:
+        path: "{{ ocp_install_path }}/install"
+        state: directory
+
+    - name: Create OpenShift artifacts directories
+      file:
+        path: "{{ ocp_install_path }}/artifacts/openshift-{{ item }}-{{ ocp_release }}"
+        state: directory
+        mode: u+rwx,g-rx,o-rx
+      with_items:
+        - installer
+        - client
+
+    #    - name: Download Openshift installer
+    #      unarchive:
+    #        src: "{{ ocp_mirror }}/{{ ocp_release }}/openshift-install-linux-{{ ocp_release }}.tar.gz"
+    #        dest: "{{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/"
+    #        remote_src: yes
+    #        creates: "{{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/openshift-install"
+    - name: Download Openshift installer
+      shell: "cp {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/bin/openshift-install {{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/"
+
+
+    - name: Download Openshift client
+      unarchive:
+        src: "{{ ocp_mirror }}/{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz"
+        dest: "{{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/"
+        remote_src: yes
+        creates: "{{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/oc"
+
+    - name: Create a symbolic link
+      ignore_errors: yes
+      become: yes
+      file:
+        src: "{{ item.value }}"
+        dest: "{{ item.key }}"
+        state: link
+        force: yes
+      with_dict:
+        "/usr/local/bin/oc": "{{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/oc"
+        "/usr/local/bin/openshift-install": "{{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/openshift-install"
+
+    - name: Copy install-config.yaml
+      copy:
+        src: "{{ ocp_install_file_path }}"
+        dest: "{{ ocp_install_path }}/install-config.yaml"
+        owner: "{{ ansible_user}}"
+
+
+
+    - name: Copy install-config.yaml in install dir
+      shell: |
+        cp {{ ocp_install_path }}/install-config.yaml {{ ocp_install_path }}/install/install-config.yaml
+
+
+
+
+
+############ Run installation
+
+
+
+
+
+
+### There is an issue.
+#The underlying issue is known #2632
+#registry.svc.ci.openshift.org/origin/release:4.3 release image has OKD content and needs to be installed using the installer from https://github.com/openshift/okd
+#Therefore any installs of OCP using master/ other release braches requires the user override the release image to OCP one.
+
+# So we need to override the release image: https://access.redhat.com/solutions/3880221
+
+
+- name: Install OpenShift
+  when: ocp_install == "true"
+  tags: install
+  block:
+
+
+    - name:  Create manifests
+      shell: |
+        {{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/openshift-install create manifests --dir {{ ocp_install_path }}/install/
+
+    - name: Configure Custom resources for Masters and Workers
+      shell: |
+        MASTER_DISK_SIZE=$(({{ ocp_master_disk }}*1073741824)) # This is fixed in code but someday it will be possible to do it here
+        WORKER_DISK_SIZE=$(({{ ocp_worker_disk }}*1073741824))
+        sed -i "s/volume:/volume:\n        volumeSize: ${MASTER_DISK_SIZE}/g" {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_master-machines-0.yaml
+        sed -i 's/.*domainMemory.*/      domainMemory: {{ ocp_master_memory }}/g' {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_master-machines-0.yaml
+        sed -i 's/.*domainVcpu.*/      domainVcpu: {{ ocp_master_cpu }}/g' {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_master-machines-0.yaml
+        sed -i "s/volume:/volume:\n            volumeSize: ${WORKER_DISK_SIZE}/g" {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_worker-machineset-0.yaml  
+        sed -i 's/.*domainMemory.*/          domainMemory: {{ ocp_worker_memory }}/g' {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_worker-machineset-0.yaml
+        sed -i 's/.*domainVcpu.*/          domainVcpu: {{ ocp_worker_cpu }}/g' {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_worker-machineset-0.yaml
+
+
+
+
+
+    ## NOTE: We need to modify manifests because of https://github.com/openshift/installer/issues/1007 otherwise the console won't come up
+    - name:  Configure manifests to solve issue 1007
+      shell: |
+        sed -i 's/{{ metadata.name }}.//' {{ ocp_install_path }}/install/manifests/cluster-ingress-02-config.yml
+
+
+#    - name: Single Master configuration
+#      when: controlPlane.replicas == 1
+#      block:
+#        - name:  Configure ETCD to support single master
+#          blockinfile:
+#            path: "{{ ocp_install_path }}/install/manifests/cvo-overrides.yaml"
+#            block: |
+#              #
+#                overrides:
+#                - group: apps/v1
+#                  kind: Deployment
+#                  name: etcd-quorum-guard
+#                  namespace: openshift-machine-config-operator
+#                  unmanaged: true
+
+
+#    - name: No Workers configuration
+#      when: compute.0.replicas == 0
+#      block:
+#        - name:  Configure manifests to support no worker nodes
+#          shell: |
+#            sed -i 's/mastersSchedulable: false/mastersSchedulable: true/' {{ ocp_install_path }}/install//manifests/cluster-scheduler-02-config.yml
+
+
+############# BUG https://bugzilla.redhat.com/show_bug.cgi?id=1805034
+    - name: Copy patch for bug 1805034
+      when: controlPlane.replicas == 1
+      copy:
+        src: "single-master-patch.sh"
+        dest: "{{ ocp_install_path }}/single-master-patch.sh"
+        mode: '0775'
+#############
+
+    - name:  OpenShift install
+    #  shell: "{{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/openshift-install create cluster --dir {{ ocp_install_path }}/install/"
+    # With overrides
+      shell: |
+        ############# BUG https://bugzilla.redhat.com/show_bug.cgi?id=1805034
+        if [ {{ controlPlane.replicas }} -eq 1 ]
+        then
+          {{ ocp_install_path }}/single-master-patch.sh &
+        fi
+        #############
+        export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE={{ ocp_install_install_release_image_override }}
+        {{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/openshift-install create cluster --dir {{ ocp_install_path }}/install/
+
+
+- name: OpenShift Post-Install
+  when: ocp_install == "true"
+  tags: install
+  block:
+    - name: Copy kubeconfig for admin
+      shell: "mkdir ~/.kube ; cp {{ ocp_install_path }}/install/auth/kubeconfig ~/.kube/config "
+
+
+    - name: Trust locally Ingress default CA
+      shell: |
+        while [[ $(oc -n openshift-ingress get secret/router-certs-default | grep router-certs-default  > /dev/null ; echo $?) != "0" ]]; do echo "Waiting for router-certs-default object" && sleep 10; done
+        oc -n openshift-ingress extract secret/router-certs-default
+        sudo cp tls.crt /etc/pki/ca-trust/source/anchors/ingress-cacert.pem
+        sudo chown root:root /etc/pki/ca-trust/source/anchors/ingress-cacert.pem
+        sudo chmod 0644 /etc/pki/ca-trust/source/anchors/ingress-cacert.pem
+        sudo update-ca-trust extract
+
+
+    - name: Configure Autocompletion
+      shell: "oc completion bash > oc_bash_completion   ;  sudo cp oc_bash_completion /etc/bash_completion.d/ ; yum install -y bash-completion"
+
+
+
+
+
+    - name: Create post-installation directory
+      file:
+        path: "{{ ocp_install_path }}/post-install"
+        state: directory
+
+
+    - name: Copy post-install scripts
+      copy:
+        src: "post-install-scripts/"
+        dest: "{{ ocp_install_path }}/post-install/"
+
+
+
+    - name: Configure Registry Storage (NFS)
+      shell: "cd {{ ocp_install_path }}/post-install/nfs-registry/  ; chmod +x run.sh ; ./run.sh "
+      when: nfs_storage  == "true" 
+
+
+    - name: Configure Registry Storage (Ephemeral)
+      shell: |
+        oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{"spec":{"storage":{"emptyDir":{}}}}'
+      when: nfs_storage  != "true"
+
+    - name: Configure NFS Storage autoprovisioner (not supported)
+      shell: "cd {{ ocp_install_path }}/post-install/nfs-autoprovisioner/  ; chmod +x run.sh ; ./run.sh "
+      when: nfs_storage  != "true"
+
+    - name: Configure Local users
+      shell: "cd {{ ocp_install_path }}/post-install/authentication/  ; chmod +x run.sh ; ./run.sh "
+      when: ocp_create_users  == "true" 
+
+
+

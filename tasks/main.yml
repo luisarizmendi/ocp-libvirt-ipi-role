@@ -1,0 +1,20 @@
+---
+# tasks file for ocp-libvirt
+
+- include_vars: "{{ ocp_install_file_path }}"
+  tags: [ install, remove ]
+
+- include_tasks: "kvm_deploy.yml"
+  when: kvm_install == "true" or kvm_configure == "true"
+  tags: install
+
+- include_tasks: "ocp_deploy.yml"
+  when: ocp_prepare == "true" or ocp_install == "true"
+  tags: install
+
+- include_tasks: "kvm_publish.yml"
+  when: kvm_publish == "true"
+  tags: install
+
+- include_tasks: "remove.yml"
+  tags: remove

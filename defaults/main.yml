@@ -1,0 +1,61 @@
+---
+# defaults file for ocp-libvirt
+
+
+
+
+#########################################################
+## KVM config
+kvm_install: "true"
+kvm_configure: "true"
+kvm_libvirt_network_gw: "192.168.122.1"
+kvm_firewall: "iptables"
+kvm_interface: "eth0"
+
+nfs_storage: "true"
+lb: "true"
+
+kvm_publish: "true"
+
+#########################################################
+## OCP install config
+ocp_prepare: "true"
+ocp_install: "true"
+
+ocp_install_file_path: "ocp-config/install-config.yaml"
+ocp_install_path: "{{ ansible_env.HOME }}/ocp"
+
+ocp_mirror: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp"
+ocp_release: "4.4.0"
+
+
+
+ocp_master_memory: 16384
+ocp_master_cpu: 4
+# in GBs
+ocp_master_disk: 120
+
+
+
+ocp_worker_memory: 8192
+ocp_worker_cpu: 2
+# in GBs
+ocp_worker_disk: 120
+
+## This is fixed right not, do not change
+ocp_api_vip: "192.168.126.11"
+ocp_apps_vip: "192.168.126.51"
+ocp_cluster_net_gw: "192.168.126.1"
+
+
+## VARS because we have to build the installer (no default libvirt support)
+ocp_openshift_installer_repo: "https://github.com/openshift/installer"
+ocp_git_branch: "release-4.4"
+
+ocp_install_install_release_image_override: "quay.io/openshift-release-dev/ocp-release:4.4.0-rc.8-x86_64"
+
+
+ocp_create_users: "true"
+
+
+

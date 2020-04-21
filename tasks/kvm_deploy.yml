@@ -1,0 +1,327 @@
+---
+
+- name: Install KVM
+  when: kvm_install  == "true"
+  become: true
+  tags: install
+  block:
+    - name: Installing KVM Packages
+      yum:
+        name:
+          - libvirt
+          - libvirt-devel
+          - libvirt-daemon-kvm
+          - qemu-kvm
+          - NetworkManager
+        state: present
+
+
+    # Update qemu to +2.4 because option fw_cfg added in 2.4
+    #  "qemu-kvm: -fw_cfg: invalid option"
+    #  https://github.com/qemu/qemu/commit/81b2b81062612e
+    - name: Add repos centos-release-openstack-stein
+      when: ansible_distribution  == "CentOS"
+      yum:
+        name: centos-release-openstack-stein
+        state: present
+
+    - name: Disable all openstack repos except centos-qemu-ev
+      when: ansible_distribution  == "CentOS"
+      command: "yum-config-manager -q --disable centos-ceph-nautilus centos-nfs-ganesha28 centos-openstack-stein"
+
+    - name: Upgrade all packages, include update qemu-kvm to >2.4
+      when: ansible_distribution  == "CentOS"
+    # because we added repo centos-qemu-ev from openstack
+      yum:
+        name: '*'
+        state: latest
+
+
+
+    - name: Enable and Start network
+      become: true
+      systemd:
+        name: NetworkManager
+        state: started
+        enabled: yes
+
+    - name: Enable and Start libvirtd
+      systemd:
+        name: libvirtd
+        state: stopped
+        enabled: yes
+
+    - name: Enable and Start libvirtd-tcp.socket
+      when: ansible_distribution  == "Fedora"
+      systemd:
+        name: libvirtd-tcp.socket
+        state: restarted
+        enabled: yes
+
+    - name: Enable and Start libvirtd
+      systemd:
+        name: libvirtd
+        state: started
+        enabled: yes
+
+    - name: Verify KVM module is loaded
+      shell: "lsmod | grep -i kvm"
+      register: result
+      failed_when: "result.rc != 0"
+
+
+    - name: Install Load Balancer
+      when: lb  == "true"
+      become: true
+      block:
+        - name: Install needed packages
+          yum:
+            name:
+              - haproxy
+            state: present
+
+        - name: Write out haproxy config file
+          template:
+            src: haproxy.cfg.j2
+            dest: /etc/haproxy/haproxy.cfg
+
+
+        - name: SEBool allow haproxy connect any port
+          ignore_errors: yes
+          shell: "setsebool -P haproxy_connect_any 1"
+
+        - name: Starting services
+          service:
+            name: "{{ item }}"
+            enabled: yes
+            state: restarted
+          with_items:
+            - haproxy
+  
+
+
+    - name: Install NFS
+      when: nfs_storage  == "true"
+      become: true
+      block:
+        - name: Install needed packages
+          yum:
+            state: latest
+            name: "{{ item }}"
+          with_items:
+            - nfs-utils
+            - rpcbind     
+
+        - name: Create mountable dirs (Fedora)
+          when: ansible_distribution  == "Fedora"
+          ignore_errors: yes
+          file:
+            path: "{{ item }}"
+            state: directory
+            mode: 0777
+            owner: nobody
+            group: nobody
+          with_items:
+            - /export
+            - /export/ocp/
+            - /export/ocp/static
+            - /export/ocp/static/registry
+            - /export/ocp/dynamic
+
+
+        - name: Create mountable dirs (CentOS)
+          when: ansible_distribution  == "CentOS"
+          ignore_errors: yes
+          file:
+            path: "{{ item }}"
+            state: directory
+            mode: 0777
+            owner: nfsnobody
+            group: nfsnobody
+          with_items:
+            - /export
+            - /export/ocp/
+            - /export/ocp/static
+            - /export/ocp/static/registry
+            - /export/ocp/dynamic
+
+        - name: FIX permissions
+          shell: |
+            chmod  777 /export/*
+
+        - name: Configure /etc/exports
+          copy:
+            dest: "/etc/exports"
+            content: |
+              /export/ocp	*(rw,sync,root_squash)
+
+        - name: Enable nfs-server
+          systemd:
+            name: nfs-server
+            state: restarted
+            enabled: True
+
+
+
+- name: Prepare KVM
+  when: kvm_configure  == "true"
+  become: true
+  tags: install
+  block:
+    - name: Enable IP Forwarding
+      shell: "sysctl net.ipv4.ip_forward=1"
+
+    - name: Make IP Forwarding configuration persistent
+      lineinfile:
+        path: /etc/sysctl.conf
+        line: "net.ipv4.ip_forward = 1"
+        insertbefore: BOF
+
+    - name: Configure libvirt listen_tls
+      lineinfile:
+        path: /etc/libvirt/libvirtd.conf
+        regexp: 'listen_tls'
+        line: listen_tls = 0
+
+    - name: Configure libvirt listen_tcp
+      lineinfile:
+        path: /etc/libvirt/libvirtd.conf
+        regexp: 'listen_tcp'
+        line: listen_tcp = 1
+
+    - name: Configure libvirt auth_tcp
+      lineinfile:
+        path: /etc/libvirt/libvirtd.conf
+        regexp: 'auth_tcp'
+        line: auth_tcp="none"
+
+    - name: Configure libvirt tcp_port
+      lineinfile:
+        path: /etc/libvirt/libvirtd.conf
+        regexp: 'tcp_port'
+        line: tcp_port = "16509"
+
+    - name: Configure libvirt LIBVIRTD_ARGS
+      lineinfile:
+        path: /etc/sysconfig/libvirtd
+        regexp: 'LIBVIRTD_ARGS'
+        line: LIBVIRTD_ARGS="--listen"
+
+    - name: restart libvirt
+      become: true
+      systemd:
+        name: libvirtd
+        state: restarted
+
+
+    - name: Configure Iptables
+      become: true
+      ignore_errors: yes
+      shell: |
+        set -x
+        iptables -D INPUT -p tcp -s 192.168.126.0/24 -d {{ kvm_libvirt_network_gw }} -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
+        iptables -D INPUT -p tcp -s {{ hostvars['installer-host']['ansible_host'] }} -d {{ hostvars['kvm-host']['ansible_host'] }} --dport 16509 -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
+        iptables -I INPUT 1 -p tcp -s 192.168.126.0/24 -d {{ kvm_libvirt_network_gw }} -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
+        iptables -I INPUT 1 -p tcp -s {{ hostvars['installer-host']['ansible_host'] }} -d {{ hostvars['kvm-host']['ansible_host'] }} --dport 16509 -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
+        iptables-save > /etc/iptables.conf
+      when: kvm_firewall == "iptables"
+
+
+    - name: Configure Firewalld
+      become: true
+      ignore_errors: yes
+      shell: |
+        DEFAULT_ZONE=$(sudo firewall-cmd --get-default-zone)
+        sudo firewall-cmd --add-rich-rule "rule service name="libvirt" reject" --permanent
+        sudo firewall-cmd --zone=$DEFAULT_ZONE --add-service=libvirt --permanent
+        sudo firewall-cmd --zone=$DEFAULT_ZONE --change-interface=tt0  --permanent
+        sudo firewall-cmd --zone=$DEFAULT_ZONE --change-interface=virbr0  --permanent
+      when: kvm_firewall == "firewalld"
+
+    - name: Configure Firewalld
+      become: true
+      ignore_errors: yes
+      shell: |
+        sudo firewall-cmd --add-rich-rule "rule service name="libvirt" reject"
+        sudo firewall-cmd --zone=dmz --change-interface=virbr0
+        sudo firewall-cmd --zone=dmz --change-interface=tt0
+        sudo firewall-cmd --zone=dmz --add-service=libvirt
+      when: ansible_distribution  == "Fedora"
+
+
+    - name: Create a directory /etc/NetworkManager/conf.d if it does not exist
+      file:
+        path: /etc/NetworkManager/conf.d
+        state: directory
+        mode: '0755'
+
+
+
+    - name: Finish Host network configuration
+      copy:
+        dest:  /etc/NetworkManager/conf.d/openshift.conf
+        content: |
+          [main]
+          dns=dnsmasq
+
+
+    - name: Create a directory /etc/NetworkManager/dnsmasq.d if it does not exist
+      file:
+        path: /etc/NetworkManager/dnsmasq.d
+        state: directory
+        mode: '0755'
+
+
+     ## NOTE: We configure .apps.{{ baseDomain }}/{{ ocp_apps_vip  }} instead of .apps.{{ metadata.name }}.{{ baseDomain }}/{{ ocp_apps_vip  }} because of https://github.com/openshift/installer/issues/1007
+
+
+    - name: DNS config without lb
+      when: lb  != "true"
+      become: true
+      block:
+        - name: Finish Host network configuration
+          when: controlPlane.replicas != 1
+          copy:
+            dest:  /etc/NetworkManager/dnsmasq.d/openshift.conf
+            content: |
+              server=/{{ baseDomain }}/{{ ocp_cluster_net_gw }}
+              address=/.apps.{{ baseDomain }}/{{ ocp_apps_vip  }}
+        - name: Finish Host network configuration
+          when: controlPlane.replicas == 1
+          copy:
+            dest:  /etc/NetworkManager/dnsmasq.d/openshift.conf
+            content: |
+              server=/{{ baseDomain }}/{{ ocp_cluster_net_gw }}
+              address=/.apps.{{ baseDomain }}/{{ ocp_api_vip  }}
+
+    - name: DNS config with lb
+      when: lb  == "true"
+      copy:
+        dest:  /etc/NetworkManager/dnsmasq.d/openshift.conf
+        content: |
+          server=/{{ baseDomain }}/{{ ocp_cluster_net_gw }}
+          address=/.apps.{{ baseDomain }}/{{ ocp_cluster_net_gw  }}
+
+    - name: Configure DNS external servers
+      shell: nmcli con mod {{ kvm_interface }} ipv4.dns "8.8.8.8 8.8.4.4"
+
+    - name: Reload network
+      become: true
+      systemd:
+        name: NetworkManager
+        state: reloaded
+
+    - name: Configure DNS external servers
+      shell: 'echo "nameserver 8.8.8.8" >> /etc/resolv.conf'
+
+ #   - name: restart network
+ #     become: true
+ #     systemd:
+ #       name: NetworkManager
+ #       state: restarted
+
+
+ #   - name: Wait for SSH connection
+ #     local_action: wait_for host={{ ansible_host }} delay=15 port={{ ansible_port }} timeout=300 state=started
+
+
