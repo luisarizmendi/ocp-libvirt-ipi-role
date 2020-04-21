@@ -219,6 +219,22 @@ Inventory file does not need any fancy stuff, this is an example:
 kvm-node ansible_host=1.2.3.4 ansible_port=22 ansible_user=larizmen
 ```
 
+So one probably directory structure that you could have to support the playbook (`ocp_libvirt_ipi.yaml` in this example) would be this one:
+
+```
+.
+├── ansible.cfg
+├── ansible.log
+├── inventory
+├── ocp-config
+│   └── install-config.yaml
+├── ocp_libvirt_ipi.yaml
+└── roles
+    └── ocp_libvirt_ipi
+        └──ocp_libvirt_ipi.yaml
+...
+```
+
 After the playbook and the inventory are created you can use them to install (`tags` = `install`) and configure OpenShift :
 
 ```
