@@ -15,7 +15,7 @@ You need to prepare the install-config.yaml file, including:
 * Your Pull secret from [https://cloud.redhat.com/](https://cloud.redhat.com/)
 * KVM IP
 * Cluster name
-* Domain 
+* Domain
 * Public SSH key
 * Number of masters (1 or 3) and workers (0,1,2...or more)
 
@@ -134,54 +134,54 @@ There are some variables that you will need to modify to configure the environme
       default: "eth0"
 
 
-There are other variables that shouldn't be modify unless you have 
+There are other variables that shouldn't be modify unless you have
 
 
-kvm_install
+* kvm_install
 
       description: If "true" the role will install and prepare the KVM service
 
       default: "true"
 
-kvm_configure
+* kvm_configure
 
       description: If "true" the role will configure KVM service so libvirt IPI can use it
 
       default: "true"
 
-nfs_storage
+* nfs_storage
 
       description: If "true" NFS storage and a storageclass for dynamic PV provisioning (it’s no supported in Openshift, but it works for testing) will be configured. ou could want to avoid configuring NFS if, for example, you want to install on a laptop and you don’t want to install anything else on your machine. If false only ephemeral storage will be available after the install.
 
       default: "true"
 
-lb
+* lb
 
       description: If true the role will install and configure haproxy to load balance API among masters and routers between workers. If not true only the first master (API) and to the first worker (APPS) will be getting external requests.
 
       default: "true"
 
-kvm_publish
+* kvm_publish
 
       description: If "true" the role will configure IPTABLES so external request will be forwarded to either the load balancer (if lb = "true") ot to the first master (API) and to the first worker (APPS) (or only to first master if no workers are setup). If "false" the environment will only be available locally to the KVM.
 
       default: "true"
 
-ocp_prepare
+* ocp_prepare
 
       description: If "true" the role will prepare the host to launch the OpenShift installation
 
       default: "true"
 
-ocp_install
+* ocp_install
 
       description: If "true" the role will use the host to launch the OpenShift installation
 
       default: "true"
 
-ocp_create_users
+* ocp_create_users
 
-      description: If "true" local users will be created. One cluster-wide admin (clusteradmin / R3dhat01), 25 users (userXX / R3dhat01) included in a group ´developers´ and one cluster wide read only user (viewuser / R4dhat01) included in a group called `reviewers`. You can disable it by configuring `ocp_create_users` to `false` or change the usernames or passwords modifying the htpasswd file located in the post-install-scripts directory inside the `files` directory 
+      description: If "true" local users will be created. One cluster-wide admin (clusteradmin / R3dhat01), 25 users (userXX / R3dhat01) included in a group ´developers´ and one cluster wide read only user (viewuser / R4dhat01) included in a group called `reviewers`. You can disable it by configuring `ocp_create_users` to `false` or change the usernames or passwords modifying the htpasswd file located in the post-install-scripts directory inside the `files` directory
 
       default: "true"
 
@@ -190,7 +190,7 @@ ocp_create_users
 Example Playbook
 ----------------
 
-You can create a playbook (let's say `ocp_libvirt_ipi.yaml`), a inventory file with the KVM node details and you are good to import the role.
+You can create a playbook (let's say `ocp_libvirt_ipi.yaml`), an inventory file with the KVM node details and you are good to import the role.
 
 Find below a playbook example where we call the role and include the variables to customize the environment
 
@@ -250,11 +250,11 @@ More details about the installation
 
 The scripts will make use of libvirt IPI installation. The steps made by my scripts are based on https://github.com/openshift/installer/blob/master/docs/dev/libvirt/README.md
 
-By default, masters will be using 16GB of RAM, 120 GB of disk and 4 vcores per node and workers 8GB of RAM, 120 GB of disk and 2 vcores. Those are the minimum requirements according to documentation (although 16GB of disk is enough if you don't want to use ephemeral). Bear in mind that you will need +2GB and 2 cores in your KVM node for bootstrap while installing (remember that OpenShift bootstrap VM is deleted during the installation steps). 
+By default, masters will be using 16GB of RAM, 120 GB of disk and 4 vcores per node and workers 8GB of RAM, 120 GB of disk and 2 vcores. Those are the minimum requirements according to documentation (although 16GB of disk is enough if you don't want to use ephemeral). Bear in mind that you will need +2GB and 2 cores in your KVM node for bootstrap while installing (remember that OpenShift bootstrap VM is deleted during the installation steps).
 
 You can choose to run a full OpenShift installation (with 3 masters and 2+ nodes), just 3 masters with no workers (masters will run both master and worker roles) or just 1 master (all-in-one). The all-in-one setup would need at least 16GB and 4 cores but put as much RAM and cores you can add, and also take into account the ephemeral storage, depending if you are going to use NFS or not (see below).
 
-You will need to configure just the API and the APPS wildcard to use the environment, although you can always play with the /etc/hosts if you don't have a chance to configure a DNS (or configure a nip.io domain that includes the wildcard that you need). 
+You will need to configure just the API and the APPS wildcard to use the environment, although you can always play with the /etc/hosts if you don't have a chance to configure a DNS (or configure a nip.io domain that includes the wildcard that you need).
 
 This IPI installation won't need that you configure an external load balancer (although you can install it with just adjusting `lb`= "true" in the inventory file), any HTTP server or that you configure SRV in an external DNS.
 
@@ -278,7 +278,7 @@ Libvirt IPI is not included in the installer software by default. In order to "a
 
 `TAGS=libvirt hack/build.sh`
 
-..but before running that script to make the build, I applied two changes to the code (shown below). 
+..but before running that script to make the build, I applied two changes to the code (shown below).
 
 This is important...wait just for a moment and think about it... you can do all of this because **IT IS OPEN SOURCE**. It would be impossible if we were using close-source Software...
 
@@ -313,7 +313,7 @@ There different timers:
 * [Wating for Console URL from the route 'console' in namespace openshift-console (default 10 minutes)](https://github.com/wking/openshift-installer/blob/master/cmd/openshift-install/create.go#L412)
 
 
-### Custom RAM and CPU in OpenShift VMs (and custom size in Worker nodes) 
+### Custom RAM and CPU in OpenShift VMs (and custom size in Worker nodes)
 
 We already review that we could need to change the default disk size (only 16GB) reserved for our OpenShift nodes created by libvirt IPI. Masters can only be changed fixing the size in code. For workers a variable can be added in the manifests, so first we have to create the manifests (`openshift-installer create manifests --dir <installation dir>`) and then modify the `openshift/99_openshift-cluster-api_worker-machineset-0.yaml` file, adding the `volumeSize` with the disk size in bytes
 
@@ -347,11 +347,11 @@ This change is also done in the manifests, in this case by removing the "cluster
 
 ### OpenShift release image overwrite
 
-When building installer from the source code we use images that have [OKD](https://www.okd.io/) content, and we want to install the desired Red Hat OpenShift release, so we need to override the image that the installer will use, otherwise [the bootstrap will start but the master will be stuck before showing the login prompt](https://github.com/openshift/installer/issues/2717). 
+When building installer from the source code we use images that have [OKD](https://www.okd.io/) content, and we want to install the desired Red Hat OpenShift release, so we need to override the image that the installer will use, otherwise [the bootstrap will start but the master will be stuck before showing the login prompt](https://github.com/openshift/installer/issues/2717).
 
 You can override the release image by exporting the `OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE` variable [before launching the openshift installation](https://access.redhat.com/solutions/3880221).
 
-Be aware that you will need to select the right values for ocp_release, ocp_git_branch and `ocp_install_install_release_image_override` otherwise the installation will fail. 
+Be aware that you will need to select the right values for ocp_release, ocp_git_branch and `ocp_install_install_release_image_override` otherwise the installation will fail.
 
 
 ### All-in-One OpenShift deployment
@@ -362,7 +362,7 @@ You have to wait until the Kubernetes API is ready after launching the install a
 
 `oc patch etcd cluster -p='{"spec": {"unsupportedConfigOverrides": {"useUnsupportedUnsafeNonHANonProductionUnstableEtcd": true}}}' --type=merge`
 
-Just in case you didn't notice in the variable name, this is not supported, unstable, not safe and for non HA (of course) environments. 
+Just in case you didn't notice in the variable name, this is not supported, unstable, not safe and for non HA (of course) environments.
 
 Why not all variables are named as this one? We could just get rid of documentation in that case.
 
