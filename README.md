@@ -198,7 +198,7 @@ Find below a playbook example where we call the role and include the variables t
 ---
 - hosts: all
   roles:
-    - role: ocp-libvirt-ipi
+    - role: luisarizmendi.ocp_libvirt_ipi_role
       vars:
         ocp_install_file_path: "ocp-config/install-config.yaml"
         ocp_release: "4.4.0-rc.8"
