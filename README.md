@@ -190,7 +190,13 @@ There are other variables that shouldn't be modify unless you have
 Example Playbook
 ----------------
 
-You can create a playbook (let's say `ocp_libvirt_ipi.yaml`), an inventory file with the KVM node details and you are good to import the role.
+First, you can download the role if you don't have it yet in your system:
+
+```
+ansible-galaxy install luisarizmendi.ocp_libvirt_ipi_role
+```
+
+You need to create a playbook (let's say `ocp_libvirt_ipi.yaml`), an inventory file with the KVM node details and you are good to import the role.
 
 Find below a playbook example where we call the role and include the variables to customize the environment
 
@@ -229,9 +235,6 @@ So one probably directory structure that you could have to support the playbook 
 ├── ocp-config
 │   └── install-config.yaml
 ├── ocp_libvirt_ipi.yaml
-└── roles
-    └── ocp_libvirt_ipi
-        └── ...
 ...
 ```
 
