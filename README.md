@@ -256,6 +256,15 @@ Luis Javier Arizmendi Alonso
 
 Extended Information
 -----------------
+
+Should I read this? Maybe, it might be interesting if you want to :
+
+* better know how install OpenShift in a Fedora or CentOS7 node using libvirt IPI
+* know the details about how to run OpenShift 4.4+ All-in-One setup
+* know more about how to customize OpenShift installations, including modifying and compiling the OpenShift installer (I should include here 10k+ "not-supported, only for labs" disclaimers)
+
+Let's start why you should be using this Ansible role...
+
 Imagine that you have a baremetal node running (a not too old) Fedora or a CentOS7 (or a PC/Laptop with a good amount of RAM and CPU) and you want to run an OpenShift LAB on them, but you don't want to use [CodeReady Containers](https://developers.redhat.com/products/codeready-containers/overview) because of multiple reasons, for example because you want to test the latest (or specific) bits, because you need more than one VM running OpenShift, or because you want the flexibility to build the lab as you want. In that case you could use multiple installation paths, for example simulating baremetal UPI, or using libvirt hooks but there is another way to do it that will bring extended capabilities (Machine API): [OpenShift libvirt IPI](https://github.com/openshift/installer/blob/master/docs/dev/libvirt/README.md).
 
 OpenShift libvirt IPI is not intended to be used for installing production systems but it's quite helpful simplifying...well..."simplifying" (because you need some tips & tricks to make libvirt IPI work at this moment) the deployment on a KVM node. It's available from OpenShift 4.3 so it's quite new, thus there are multiple aspects that have to be taken into account, and that's why I made this Ansible Role.
