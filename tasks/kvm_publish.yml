@@ -5,7 +5,7 @@
       tags: install
       ignore_errors: yes
       shell: |
-        IFACE=nmcli con show | grep "{{ kvm_interface }}" | awk '{print $5}'
+        IFACE=$(nmcli con show | grep "{{ kvm_interface }}" | awk '{print $5}')
         # Publishing
         if [ {{ compute.0.replicas }} -ne 0 ]
         then
