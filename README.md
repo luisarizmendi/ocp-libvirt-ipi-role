@@ -131,7 +131,7 @@ There are some variables that you will need to modify to configure the environme
 
 * kvm_interface
 
-      description: Public interface of the KVM host (from where the OCP VMs will be published)
+      description: Public interface of the KVM host (from where the OCP VMs will be published) as appears in 'nmcli con show' (it could be "System eno1" instead just eno1)
 
       default: "eth0"
 
