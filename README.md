@@ -151,6 +151,12 @@ There are other variables that shouldn't be modify unless you have
 
       default: "true"
 
+* kvm_ext_dns
+
+      description: External DNS server
+
+      default: "8.8.8.8"
+
 * nfs_storage
 
       description: If "true" NFS storage and a storageclass for dynamic PV provisioning (it’s no supported in Openshift, but it works for testing) will be configured. ou could want to avoid configuring NFS if, for example, you want to install on a laptop and you don’t want to install anything else on your machine. If false only ephemeral storage will be available after the install.
@@ -335,7 +341,7 @@ The reason why masters are not that flexible is that for LABs, with the default 
 
 One more thing to be taken into account is that [due an issue with libvirt and the need of a wildcard for the console](https://github.com/openshift/installer/issues/1007) we need to either change the parameter `local_only` from `true` to `false` in the openshift-installer code, of if we don't want to modify (more) the code we could configure a different (from default) APPS URL. We would configure *.apps.basedomain instead of *.apps.< CLUSTERNAME >.basedomain, in order to let the openshift console being deploy, so bear in mind that change and do not include the cluster name when trying to access your APPs in this cluster. This change should be also done in the manifests, in this case by removing the "cluster name" part (probably `ocp` if you didn't change it in the `install-config.yaml`) from the url that appears in the `manifests/cluster-ingress-02-config.yml` file.
 
-In my case, I decided to change the `local_only` from `true` to `false` in the file `installer/data/data/libvirt/main.tf` so I can keep the default APPs URL.
+In my case, I decided to change the `local_only` from `true` to `false` in the file `installer/data/data/libvirt/main.tf` so I can keep the default APPs URL. Since the resolver only will reply locally, we need to forward queries to an external DNS, so we also need to include that configuration in the libvirt network description.
 
 #### Custom timeouts in the OpenShift installer
 
