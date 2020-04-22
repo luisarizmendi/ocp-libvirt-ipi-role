@@ -341,11 +341,11 @@ The reason why masters are not that flexible is that for LABs, with the default 
 
 One more thing to be taken into account is that [due an issue with libvirt and the need of a wildcard for the console](https://github.com/openshift/installer/issues/1007) we need to either change the parameter `local_only` from `true` to `false` in the openshift-installer code, of if we don't want to modify (more) the code we could configure a different (from default) APPS URL. We would configure *.apps.basedomain instead of *.apps.< CLUSTERNAME >.basedomain, in order to let the openshift console being deploy, so bear in mind that change and do not include the cluster name when trying to access your APPs in this cluster. This change should be also done in the manifests, in this case by removing the "cluster name" part (probably `ocp` if you didn't change it in the `install-config.yaml`) from the url that appears in the `manifests/cluster-ingress-02-config.yml` file.
 
-In my case, I decided to change the `local_only` from `true` to `false` in the file `installer/data/data/libvirt/main.tf` so I can keep the default APPs URL. Since the resolver only will reply locally, we need to forward queries to an external DNS, so we also need to include that configuration in the libvirt network description.
+In my case, I decided to change the `local_only` from `true` to `false` in the file `installer/data/data/libvirt/main.tf` so I can keep the default APPs URL. Since the resolver only will reply locally, we need to forward queries to somewhere else, and the trick here is to forward the queries to the local dnsmasq service that we configured on the KVM host.
 
 #### Custom timeouts in the OpenShift installer
 
-When running the install in a dedicated hardware with plenty of resources the default timeouts are ok... but this installer is intended to be used even in Laptops, so sometimes it takes longer than that. The only way to modify the timeouts of the openshift installer at this moment (I'm not sure that this will change) is modifying the code.
+When running the install in dedicated hardware with plenty of resources the default timeouts are ok... but this installer is intended to be used even in Laptops, so sometimes it takes longer than that. The only way to modify the timeouts of the openshift installer at this moment (I'm not sure that this will change) is modifying the code.
 
 There different timers:
 * [Waiting for bootstrap Kubernetes API (default 20 minutes)](https://github.com/wking/openshift-installer/blob/master/cmd/openshift-install/create.go#L255)
