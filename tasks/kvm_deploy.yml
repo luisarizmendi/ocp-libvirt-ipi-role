@@ -307,7 +307,6 @@
         dest:  /etc/NetworkManager/dnsmasq.d/openshift.conf
         content: |
           server=/{{ baseDomain }}/{{ ocp_cluster_net_gw }}
-          #address=/api.{{ metadata.name }}.{{ baseDomain }}/{{ ocp_cluster_net_gw  }}
           address=/.apps.{{ metadata.name }}.{{ baseDomain }}/{{ ocp_cluster_net_gw  }}
 
     - name: Configure DNS external servers
