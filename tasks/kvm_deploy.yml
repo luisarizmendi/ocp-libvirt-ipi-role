@@ -14,6 +14,7 @@
           - qemu-kvm
           - NetworkManager
           - unzip
+          - tar
         state: present
 
 
@@ -221,15 +222,15 @@
         state: restarted
 
 
-    - name: Configure Iptables (THIS IS AN INSECURE CONFIGURATION. YOU SHOULD CLOSE THE LIBVIRT PORT WHEN YOU ARE DONE)
+    - name: Configure Iptables
       become: true
       ignore_errors: yes
       shell: |
         set -x
         iptables -D INPUT -p tcp -s 192.168.126.0/24 -d {{ kvm_libvirt_network_gw }} -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
-        iptables -D INPUT -p tcp  --dport 16509 -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
+        #iptables -D INPUT -p tcp  --dport 16509 -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
         iptables -I INPUT 1 -p tcp -s 192.168.126.0/24 -d {{ kvm_libvirt_network_gw }} -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
-        iptables -I INPUT 1 -p tcp  --dport 16509 -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
+        #iptables -I INPUT 1 -p tcp --dport 16509 -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
         iptables-save > /etc/iptables.conf
       when: kvm_firewall == "iptables"
 
