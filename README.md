@@ -136,7 +136,7 @@ There are some variables that you will need to modify to configure the environme
       default: "eth0"
 
 
-There are other variables that shouldn't be modify unless you have
+There are other variables that shouldn't be modified unless you have
 
 
 * kvm_install
