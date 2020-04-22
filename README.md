@@ -335,7 +335,7 @@ The reason why masters are not that flexible is that for LABs, with the default 
 
 One more thing to be taken into account is that [due an issue with libvirt and the need of a wildcard for the console](https://github.com/openshift/installer/issues/1007) we need to either change the paramter `local_only` from `true` to `false` in the openshift-installer code, of if we don't want to modify (more) the code we could configure a different (from default) APPS URL. We would configure *.apps.basedomain instead of *.apps.< CLUSTERNAME >.basedomain, in order to let the openshift console being deploy, so bear in mind that change and do not include the cluster name when trying to access your APPs in this cluster. This change should be also done in the manifests, in this case by removing the "cluster name" part (probably `ocp` if you didn't change it in the `install-config.yaml`) from the url that appears in the `manifests/cluster-ingress-02-config.yml` file.
 
-In my case I decided to change the `local_only` from `true` to `false` in the file `installer/data/data/libvirt/main.tf`
+In my case I decided to change the `local_only` from `true` to `false` in the file `installer/data/data/libvirt/main.tf` so I can keep the default APPs URL.
 
 #### Custom timeouts in the OpenShift installer
 
