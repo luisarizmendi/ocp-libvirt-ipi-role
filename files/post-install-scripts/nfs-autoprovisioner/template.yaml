@@ -71,7 +71,7 @@ objects:
     namespace: "${NAMESPACE_NFS}"
   spec:
     replicas: 1
-    selector:              
+    selector:
       matchLabels:
         app: nfs-client-provisioner
     strategy:
