@@ -20,17 +20,17 @@
     #  "qemu-kvm: -fw_cfg: invalid option"
     #  https://github.com/qemu/qemu/commit/81b2b81062612e
     - name: Add repos centos-release-openstack-stein
-      when: ansible_distribution  == "CentOS"
+      when: ansible_distribution  == "CentOS" or ansible_distribution == 'Red Hat Enterprise Linux'
       yum:
         name: centos-release-openstack-stein
         state: present
 
     - name: Disable all openstack repos except centos-qemu-ev
-      when: ansible_distribution  == "CentOS"
+      when: ansible_distribution  == "CentOS"  or ansible_distribution == 'Red Hat Enterprise Linux'
       command: "yum-config-manager -q --disable centos-ceph-nautilus centos-nfs-ganesha28 centos-openstack-stein"
 
     - name: Upgrade all packages, include update qemu-kvm to >2.4
-      when: ansible_distribution  == "CentOS"
+      when: ansible_distribution  == "CentOS"  or ansible_distribution == 'Red Hat Enterprise Linux'
     # because we added repo centos-qemu-ev from openstack
       yum:
         name: '*'
@@ -129,8 +129,8 @@
             - /export/ocp/dynamic
 
 
-        - name: Create mountable dirs (CentOS)
-          when: ansible_distribution  == "CentOS"
+        - name: Create mountable dirs (CentOS/RHEL)
+          when: ansible_distribution  == "CentOS"  or ansible_distribution == 'Red Hat Enterprise Linux'
           ignore_errors: yes
           file:
             path: "{{ item }}"
