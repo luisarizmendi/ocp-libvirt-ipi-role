@@ -331,6 +331,11 @@ resource "libvirt_volume" "master" {
 
 The reason why masters are not that flexible is that for LABs, with the default disk size you are good to go....but maybe there is one use case where you want to increase the disk size, and that's when you want to run an All-in-One setup (this is allowed in my playbooks) because the master will need to run the workloads as well (even more important if you don't have configured any storage backend to have PVs).
 
+### Change "local_only" parameter of created libvirt networks
+
+One more thing to be taken into account is that [due an issue with libvirt and the need of a wildcard for the console](https://github.com/openshift/installer/issues/1007) we need to either change the paramter `local_only` from `true` to `false` in the openshift-installer code, of if we don't want to modify (more) the code we could configure a different (from default) APPS URL. We would configure *.apps.basedomain instead of *.apps.< CLUSTERNAME >.basedomain, in order to let the openshift console being deploy, so bear in mind that change and do not include the cluster name when trying to access your APPs in this cluster. This change should be also done in the manifests, in this case by removing the "cluster name" part (probably `ocp` if you didn't change it in the `install-config.yaml`) from the url that appears in the `manifests/cluster-ingress-02-config.yml` file.
+
+In my case I decided to change the `local_only` from `true` to `false` in the file `installer/data/data/libvirt/main.tf`
 
 #### Custom timeouts in the OpenShift installer
 
@@ -366,13 +371,6 @@ spec:
             volumeName: ""
 ...
 ```
-
-
-### Custom URL for Applications
-
-One more thing to be taken into account is that [due an issue with libvirt and the need of a wildcard for the console](https://github.com/openshift/installer/issues/1007) we need to configure *.apps.basedomain instead of *.apps.< CLUSTERNAME >.basedomain, in order to let the openshift console being deploy, so bear in mind that change and do not include the cluster name when trying to access your APPs in this cluster.
-
-This change is also done in the manifests, in this case by removing the "cluster name" part (probably `ocp` if you didn't change it in the `install-config.yaml`) from the url that appears in the `manifests/cluster-ingress-02-config.yml` file.
 
 
 ### OpenShift release image overwrite
