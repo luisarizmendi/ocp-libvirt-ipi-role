@@ -282,9 +282,6 @@
         mode: '0755'
 
 
-     ## NOTE: We configure .apps.{{ baseDomain }}/{{ ocp_apps_vip  }} instead of .apps.{{ metadata.name }}.{{ baseDomain }}/{{ ocp_apps_vip  }} because of https://github.com/openshift/installer/issues/1007
-
-
     - name: DNS config without lb
       when: lb  != "true"
       become: true
@@ -302,7 +299,7 @@
             dest:  /etc/NetworkManager/dnsmasq.d/openshift.conf
             content: |
               server=/{{ baseDomain }}/{{ ocp_cluster_net_gw }}
-              address=/.apps.{{ baseDomain }}/{{ ocp_api_vip  }}
+              address=/.apps.{{ metadata.name }}.{{ baseDomain }}/{{ ocp_api_vip  }}
 
     - name: DNS config with lb
       when: lb  == "true"
@@ -310,7 +307,7 @@
         dest:  /etc/NetworkManager/dnsmasq.d/openshift.conf
         content: |
           server=/{{ baseDomain }}/{{ ocp_cluster_net_gw }}
-          address=/.apps.{{ baseDomain }}/{{ ocp_cluster_net_gw  }}
+          address=/.apps.{{ metadata.name }}.{{ baseDomain }}/{{ ocp_cluster_net_gw  }}
 
     - name: Configure DNS external servers
       shell: nmcli con mod "{{ kvm_interface }}" ipv4.dns "8.8.8.8 8.8.4.4"

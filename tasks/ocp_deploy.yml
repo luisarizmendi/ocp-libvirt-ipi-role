@@ -24,7 +24,10 @@
         clone: yes
         force: yes
 
-
+    ## NOTE: We need to modify manifests because of https://github.com/openshift/installer/issues/1007 otherwise the console won't come up
+    - name: Change local_only to solve issue 1007
+      shell: |
+        sed -i 's/local_only = true/local_only = false/g' {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/data/data/libvirt/main.tf
 
     - name: Change timeouts to 180m
       shell: |
@@ -152,10 +155,10 @@
 
 
 
-    ## NOTE: We need to modify manifests because of https://github.com/openshift/installer/issues/1007 otherwise the console won't come up
-    - name:  Configure manifests to solve issue 1007
-      shell: |
-        sed -i 's/{{ metadata.name }}.//' {{ ocp_install_path }}/install/manifests/cluster-ingress-02-config.yml
+#    ## NOTE: We need to modify manifests because of https://github.com/openshift/installer/issues/1007 otherwise the console won't come up
+#    - name:  Configure manifests to solve issue 1007
+#      shell: |
+#        sed -i 's/{{ metadata.name }}.//' {{ ocp_install_path }}/install/manifests/cluster-ingress-02-config.yml
 
 
 #    - name: Single Master configuration
