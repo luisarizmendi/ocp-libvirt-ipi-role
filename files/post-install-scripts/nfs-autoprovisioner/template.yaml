@@ -65,12 +65,15 @@ objects:
     name: leader-locking-nfs-client-provisioner
     apiGroup: rbac.authorization.k8s.io
 - kind: Deployment
-  apiVersion: extensions/v1beta1
+  apiVersion: apps/v1
   metadata:
     name: nfs-client-provisioner
     namespace: "${NAMESPACE_NFS}"
   spec:
     replicas: 1
+    selector:              
+      matchLabels:
+        app: nfs-client-provisioner
     strategy:
       type: Recreate
     template:
