@@ -20,17 +20,20 @@
     #  "qemu-kvm: -fw_cfg: invalid option"
     #  https://github.com/qemu/qemu/commit/81b2b81062612e
     - name: Add repos centos-release-openstack-stein
-      when: ansible_distribution  == "CentOS" or ansible_distribution == 'Red Hat Enterprise Linux'
+      when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or
+            (ansible_distribution == "Red Hat Enterprise Linux" and ansible_distribution_major_version == "7")
       yum:
         name: centos-release-openstack-stein
         state: present
 
     - name: Disable all openstack repos except centos-qemu-ev
-      when: ansible_distribution  == "CentOS"  or ansible_distribution == 'Red Hat Enterprise Linux'
+      when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or
+            (ansible_distribution == "Red Hat Enterprise Linux" and ansible_distribution_major_version == "7")
       command: "yum-config-manager -q --disable centos-ceph-nautilus centos-nfs-ganesha28 centos-openstack-stein"
 
     - name: Upgrade all packages, include update qemu-kvm to >2.4
-      when: ansible_distribution  == "CentOS"  or ansible_distribution == 'Red Hat Enterprise Linux'
+      when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or
+            (ansible_distribution == "Red Hat Enterprise Linux" and ansible_distribution_major_version == "7")
     # because we added repo centos-qemu-ev from openstack
       yum:
         name: '*'
@@ -52,7 +55,7 @@
         enabled: yes
 
     - name: Enable and Start libvirtd-tcp.socket
-      when: ansible_distribution  == "Fedora"
+      when: ansible_distribution  == "Fedora" 
       systemd:
         name: libvirtd-tcp.socket
         state: restarted
@@ -112,8 +115,10 @@
             - nfs-utils
             - rpcbind     
 
-        - name: Create mountable dirs (Fedora)
-          when: ansible_distribution  == "Fedora"
+        - name: Create mountable dirs (Fedora / CentOS/RHEL 8)
+          when: ansible_distribution  == "Fedora" or
+                (ansible_distribution == "CentOS" and ansible_distribution_major_version == "8") or
+                (ansible_distribution == "Red Hat Enterprise Linux" and ansible_distribution_major_version == "8")
           ignore_errors: yes
           file:
             path: "{{ item }}"
@@ -130,7 +135,8 @@
 
 
         - name: Create mountable dirs (CentOS/RHEL)
-          when: ansible_distribution  == "CentOS"  or ansible_distribution == 'Red Hat Enterprise Linux'
+          when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or
+                (ansible_distribution == "Red Hat Enterprise Linux" and ansible_distribution_major_version == "7")
           ignore_errors: yes
           file:
             path: "{{ item }}"
@@ -214,15 +220,15 @@
         state: restarted
 
 
-    - name: Configure Iptables
+    - name: Configure Iptables (THIS IS AN INSECURE CONFIGURATION. YOU SHOULD CLOSE THE LIBVIRT PORT WHEN YOU ARE DONE)
       become: true
       ignore_errors: yes
       shell: |
         set -x
         iptables -D INPUT -p tcp -s 192.168.126.0/24 -d {{ kvm_libvirt_network_gw }} -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
-        iptables -D INPUT -p tcp -s {{ hostvars['installer-host']['ansible_host'] }} -d {{ hostvars['kvm-host']['ansible_host'] }} --dport 16509 -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
+        iptables -D INPUT -p tcp  --dport 16509 -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
         iptables -I INPUT 1 -p tcp -s 192.168.126.0/24 -d {{ kvm_libvirt_network_gw }} -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
-        iptables -I INPUT 1 -p tcp -s {{ hostvars['installer-host']['ansible_host'] }} -d {{ hostvars['kvm-host']['ansible_host'] }} --dport 16509 -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
+        iptables -I INPUT 1 -p tcp  --dport 16509 -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
         iptables-save > /etc/iptables.conf
       when: kvm_firewall == "iptables"
 
@@ -246,7 +252,9 @@
         sudo firewall-cmd --zone=dmz --change-interface=virbr0
         sudo firewall-cmd --zone=dmz --change-interface=tt0
         sudo firewall-cmd --zone=dmz --add-service=libvirt
-      when: ansible_distribution  == "Fedora"
+      when: ansible_distribution  == "Fedora"  or
+            (ansible_distribution == "CentOS" and ansible_distribution_major_version == "8") or
+            (ansible_distribution == "Red Hat Enterprise Linux" and ansible_distribution_major_version == "8")
 
 
     - name: Create a directory /etc/NetworkManager/conf.d if it does not exist
@@ -303,7 +311,7 @@
           address=/.apps.{{ baseDomain }}/{{ ocp_cluster_net_gw  }}
 
     - name: Configure DNS external servers
-      shell: nmcli con mod {{ kvm_interface }} ipv4.dns "8.8.8.8 8.8.4.4"
+      shell: nmcli con mod "{{ kvm_interface }}" ipv4.dns "8.8.8.8 8.8.4.4"
 
     - name: Reload network
       become: true
