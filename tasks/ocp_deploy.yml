@@ -260,7 +260,7 @@
 
     - name: Configure NFS Storage autoprovisioner (not supported)
       shell: "cd {{ ocp_install_path }}/post-install/nfs-autoprovisioner/  ; chmod +x run.sh ; ./run.sh "
-      when: nfs_storage  != "true"
+      when: nfs_storage  == "true"
 
     - name: Configure Local users
       shell: "cd {{ ocp_install_path }}/post-install/authentication/  ; chmod +x run.sh ; ./run.sh "
