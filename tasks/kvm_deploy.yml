@@ -310,7 +310,7 @@
           address=/.apps.{{ metadata.name }}.{{ baseDomain }}/{{ ocp_cluster_net_gw  }}
 
     - name: Configure DNS external servers
-      shell: nmcli con mod "{{ kvm_interface }}" ipv4.dns "8.8.8.8 8.8.4.4"
+      shell: nmcli con mod "{{ kvm_interface }}" ipv4.dns "{{ kvm_ext_dns }} 8.8.4.4"
 
     - name: Reload network
       become: true
@@ -319,7 +319,7 @@
         state: reloaded
 
     - name: Configure DNS external servers
-      shell: 'echo "nameserver 8.8.8.8" >> /etc/resolv.conf'
+      shell: 'echo "nameserver {{ kvm_ext_dns }}" >> /etc/resolv.conf'
 
  #   - name: restart network
  #     become: true
