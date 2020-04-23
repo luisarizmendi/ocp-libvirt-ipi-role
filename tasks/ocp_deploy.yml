@@ -1,6 +1,6 @@
 ---
 
-################ 
+################
 # We need to compile with libvirt support since it's not included by default (it's in development)
 - name: Compile OpenShift installer (libvirt is in development)
   when: ocp_prepare == "true"
@@ -149,7 +149,7 @@
         sed -i "s/volume:/volume:\n        volumeSize: ${MASTER_DISK_SIZE}/g" {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_master-machines-0.yaml
         sed -i 's/.*domainMemory.*/      domainMemory: {{ ocp_master_memory }}/g' {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_master-machines-0.yaml
         sed -i 's/.*domainVcpu.*/      domainVcpu: {{ ocp_master_cpu }}/g' {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_master-machines-0.yaml
-        sed -i "s/volume:/volume:\n            volumeSize: ${WORKER_DISK_SIZE}/g" {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_worker-machineset-0.yaml  
+        sed -i "s/volume:/volume:\n            volumeSize: ${WORKER_DISK_SIZE}/g" {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_worker-machineset-0.yaml
         sed -i 's/.*domainMemory.*/          domainMemory: {{ ocp_worker_memory }}/g' {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_worker-machineset-0.yaml
         sed -i 's/.*domainVcpu.*/          domainVcpu: {{ ocp_worker_cpu }}/g' {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_worker-machineset-0.yaml
 
@@ -250,7 +250,7 @@
 
     - name: Configure Registry Storage (NFS)
       shell: "cd {{ ocp_install_path }}/post-install/nfs-registry/  ; chmod +x run.sh ; ./run.sh "
-      when: nfs_storage  == "true" 
+      when: nfs_storage  == "true"
 
 
     - name: Configure Registry Storage (Ephemeral)
@@ -264,7 +264,49 @@
 
     - name: Configure Local users
       shell: "cd {{ ocp_install_path }}/post-install/authentication/  ; chmod +x run.sh ; ./run.sh "
-      when: ocp_create_users  == "true" 
+      when: ocp_create_users  == "true"
 
+    - name: Get Web Console URL
+      shell: "oc get route -n openshift-console | grep https | awk '{print $2}' "
+      register: webconsoleurl
 
+    - name: Get kubeadmin password
+      shell: "tail {{ ocp_install_path }}/install/.openshift_install.log | grep password: | awk -F 'password: ' '{print  substr($2, 1, length($2)-1)}'"
+      register: kubeadminpass
 
+    - name: OpenShift Web Console access
+      debug:
+        msg:
+          - "                                                                                                        "
+          - "                                                                                                        "
+          - "   ***********************************************************************************************      "
+          - "                                         WEB CONSOLE ACCESS                                             "
+          - "   ***********************************************************************************************      "
+          - "                                                                                                        "
+          - "   https://{{ webconsoleurl.stdout }}      "
+          - "                                                                                                        "
+          - "                                                                                                        "
+          - "   kube:admin        - system:admin          Username: kubeadmin     Password: {{ kubeadminpass.stdout  }}  "
+          - "                                                                                                        "
+          - "***********************************************************************************************         "
+      when: ocp_create_users  != "true"
+
+    - name: OpenShift Web Console access
+      debug:
+        msg:
+          - "                                                                                                        "
+          - "                                                                                                        "
+          - "   ***********************************************************************************************      "
+          - "                                         WEB CONSOLE ACCESS                                             "
+          - "   ***********************************************************************************************      "
+          - "                                                                                                        "
+          - "   https://{{ webconsoleurl.stdout }}     "
+          - "                                                                                                        "
+          - "                                                                                                        "
+          - "   htpasswd_provider - Cluster Admin         Username: clusteradmin  Password: R4dhat01                 "
+          - "   htpasswd_provider - Cluster Readonly      Username: viewuser      Password: R4dhat01                 "
+          - "   htpasswd_provider - Regular User (1-25)   Username: userXX        Password: R4dhat01                 "
+          - "   kube:admin        - system:admin          Username: kubeadmin     Password: {{ kubeadminpass.stdout  }}  "
+          - "                                                                                                        "
+          - "***********************************************************************************************         "
+      when: ocp_create_users  == "true"
