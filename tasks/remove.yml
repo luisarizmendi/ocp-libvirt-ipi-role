@@ -45,6 +45,40 @@
         iptables -D FORWARD -i any -o any -j ACCEPT
 
 
+
+    - name: Configure Firewalld
+      become: true
+      ignore_errors: yes
+      shell: |
+        DEFAULT_ZONE=$(sudo firewall-cmd --get-default-zone)
+        sudo firewall-cmd --remove-rich-rule "rule service name="libvirt" reject" --permanent
+        sudo firewall-cmd --zone=$DEFAULT_ZONE --remove-service=libvirt --permanent
+        sudo firewall-cmd --zone=$DEFAULT_ZONE --remove-interface=tt0  --permanent
+        sudo firewall-cmd --zone=$DEFAULT_ZONE --remove-interface=virbr0  --permanent
+        sudo firewall-cmd --reload
+      when: kvm_firewall == "firewalld"
+
+    - name: Configure Firewalld
+      become: true
+      ignore_errors: yes
+      shell: |
+        sudo firewall-cmd --remove-rich-rule  "rule service name="libvirt" reject" --permanent
+        sudo firewall-cmd --zone=dmz --remove-interface=virbr0 --permanent
+        sudo firewall-cmd --zone=dmz --remove-interface=tt0 --permanent
+        sudo firewall-cmd --zone=dmz --remove-service=libvirt --permanent
+        sudo firewall-cmd --reload
+      when: ansible_distribution  == "Fedora"
+
+    - name: Configure Firewalld
+      become: true
+      ignore_errors: yes
+      shell: |
+        sudo firewall-cmd --zone=libvirt --add-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
+        sudo firewall-cmd --reload
+      when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "8") or
+            (ansible_distribution == "RedHat" and ansible_distribution_major_version == "8")
+
+
     - name: Remove Load Balancer
       when: lb  == "true"
       become: true
@@ -98,4 +132,3 @@
 
     - name: Configure DNS external servers
       shell: 'echo "nameserver 8.8.8.8" >> /etc/resolv.conf'
-

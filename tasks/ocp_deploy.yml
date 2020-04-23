@@ -27,7 +27,7 @@
     ## NOTE: We need to modify manifests because of https://github.com/openshift/installer/issues/1007 otherwise the console won't come up
     - name: Change local_only to solve issue 1007
       shell: |
-        sed -i "s/local_only = true/local_only = true\n    forwarders { \n        address = \"{{ kvm_libvirt_network_gw }}\"\n        domain = \"apps.{{ metadata.name }}.{{ baseDomain }}\" \n    }/g" {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/data/data/libvirt/main.tf
+        sed -i "s/local_only = true/local_only = true\n    forwarders { \n        address = \"{{ kvm_libvirt_network_gw }}\"\n        domain = \"apps.\${var.cluster_domain}\" \n    }/g" {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/data/data/libvirt/main.tf
 
 
 
@@ -288,7 +288,7 @@
           - "                                                                                                        "
           - "   Username: kubeadmin     Password: {{ kubeadminpass.stdout  }}                                            "
           - "                                                                                                        "
-          - "***********************************************************************************************         "
+          - "   ***********************************************************************************************      "
       when: ocp_create_users  != "true"
 
     - name: OpenShift Web Console access
@@ -308,5 +308,5 @@
           - "   htpasswd_provider - Regular User (1-25)   Username: userXX        Password: R4dhat01                 "
           - "   kube:admin        - system:admin          Username: kubeadmin     Password: {{ kubeadminpass.stdout  }}  "
           - "                                                                                                        "
-          - "***********************************************************************************************         "
+          - "   ***********************************************************************************************      "
       when: ocp_create_users  == "true"

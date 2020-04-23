@@ -57,7 +57,7 @@
         enabled: yes
 
     - name: Enable and Start libvirtd-tcp.socket
-      when: ansible_distribution  == "Fedora" 
+      when: ansible_distribution  == "Fedora"
       systemd:
         name: libvirtd-tcp.socket
         state: restarted
@@ -102,7 +102,7 @@
             state: restarted
           with_items:
             - haproxy
-  
+
 
 
     - name: Install NFS
@@ -115,7 +115,7 @@
             name: "{{ item }}"
           with_items:
             - nfs-utils
-            - rpcbind     
+            - rpcbind
 
         - name: Create mountable dirs (Fedora / CentOS/RHEL 8)
           when: ansible_distribution  == "Fedora" or
@@ -244,20 +244,28 @@
         sudo firewall-cmd --zone=$DEFAULT_ZONE --add-service=libvirt --permanent
         sudo firewall-cmd --zone=$DEFAULT_ZONE --change-interface=tt0  --permanent
         sudo firewall-cmd --zone=$DEFAULT_ZONE --change-interface=virbr0  --permanent
+        sudo firewall-cmd --reload
       when: kvm_firewall == "firewalld"
 
     - name: Configure Firewalld
       become: true
       ignore_errors: yes
       shell: |
-        sudo firewall-cmd --add-rich-rule "rule service name="libvirt" reject"
-        sudo firewall-cmd --zone=dmz --change-interface=virbr0
-        sudo firewall-cmd --zone=dmz --change-interface=tt0
-        sudo firewall-cmd --zone=dmz --add-service=libvirt
-      when: ansible_distribution  == "Fedora"  or
-            (ansible_distribution == "CentOS" and ansible_distribution_major_version == "8") or
-            (ansible_distribution == "RedHat" and ansible_distribution_major_version == "8")
+        sudo firewall-cmd --add-rich-rule "rule service name="libvirt" reject" --permanent
+        sudo firewall-cmd --zone=dmz --change-interface=virbr0 --permanent
+        sudo firewall-cmd --zone=dmz --change-interface=tt0 --permanent
+        sudo firewall-cmd --zone=dmz --add-service=libvirt --permanent
+        sudo firewall-cmd --reload
+      when: ansible_distribution  == "Fedora"
 
+    - name: Configure Firewalld
+      become: true
+      ignore_errors: yes
+      shell: |
+        sudo firewall-cmd --zone=libvirt --add-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
+        sudo firewall-cmd --reload
+      when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "8") or
+            (ansible_distribution == "RedHat" and ansible_distribution_major_version == "8")
 
     - name: Create a directory /etc/NetworkManager/conf.d if it does not exist
       file:
@@ -330,5 +338,3 @@
 
  #   - name: Wait for SSH connection
  #     local_action: wait_for host={{ ansible_host }} delay=15 port={{ ansible_port }} timeout=300 state=started
-
-
