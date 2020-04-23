@@ -23,19 +23,19 @@
     #  https://github.com/qemu/qemu/commit/81b2b81062612e
     - name: Add repos centos-release-openstack-stein
       when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or
-            (ansible_distribution == "Red Hat Enterprise Linux" and ansible_distribution_major_version == "7")
+            (ansible_distribution == "RedHat" and ansible_distribution_major_version == "7")
       yum:
         name: centos-release-openstack-stein
         state: present
 
     - name: Disable all openstack repos except centos-qemu-ev
       when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or
-            (ansible_distribution == "Red Hat Enterprise Linux" and ansible_distribution_major_version == "7")
+            (ansible_distribution == "RedHat" and ansible_distribution_major_version == "7")
       command: "yum-config-manager -q --disable centos-ceph-nautilus centos-nfs-ganesha28 centos-openstack-stein"
 
     - name: Upgrade all packages, include update qemu-kvm to >2.4
       when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or
-            (ansible_distribution == "Red Hat Enterprise Linux" and ansible_distribution_major_version == "7")
+            (ansible_distribution == "RedHat" and ansible_distribution_major_version == "7")
     # because we added repo centos-qemu-ev from openstack
       yum:
         name: '*'
@@ -120,7 +120,7 @@
         - name: Create mountable dirs (Fedora / CentOS/RHEL 8)
           when: ansible_distribution  == "Fedora" or
                 (ansible_distribution == "CentOS" and ansible_distribution_major_version == "8") or
-                (ansible_distribution == "Red Hat Enterprise Linux" and ansible_distribution_major_version == "8")
+                (ansible_distribution == "RedHat" and ansible_distribution_major_version == "8")
           ignore_errors: yes
           file:
             path: "{{ item }}"
@@ -138,7 +138,7 @@
 
         - name: Create mountable dirs (CentOS/RHEL)
           when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or
-                (ansible_distribution == "Red Hat Enterprise Linux" and ansible_distribution_major_version == "7")
+                (ansible_distribution == "RedHat" and ansible_distribution_major_version == "7")
           ignore_errors: yes
           file:
             path: "{{ item }}"
@@ -256,7 +256,7 @@
         sudo firewall-cmd --zone=dmz --add-service=libvirt
       when: ansible_distribution  == "Fedora"  or
             (ansible_distribution == "CentOS" and ansible_distribution_major_version == "8") or
-            (ansible_distribution == "Red Hat Enterprise Linux" and ansible_distribution_major_version == "8")
+            (ansible_distribution == "RedHat" and ansible_distribution_major_version == "8")
 
 
     - name: Create a directory /etc/NetworkManager/conf.d if it does not exist
