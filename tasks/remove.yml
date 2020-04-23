@@ -73,6 +73,10 @@
       become: true
       ignore_errors: yes
       shell: |
+        sudo firewall-cmd --zone=libvirt --remove-service=libvirt --permanent
+        sudo firewall-cmd --zone=libvirt --remove-service=http --permanent
+        sudo firewall-cmd --zone=libvirt --remove-service=https --permanent
+        sudo firewall-cmd --zone=libvirt --remove-service=ocpapi --permanent
         sudo firewall-cmd --zone=libvirt --remove-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
         sudo firewall-cmd --reload
       when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "8") or
