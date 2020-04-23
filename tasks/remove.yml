@@ -76,6 +76,7 @@
         sudo firewall-cmd --zone=libvirt --remove-service=libvirt --permanent
         sudo firewall-cmd --zone=libvirt --remove-service=http --permanent
         sudo firewall-cmd --zone=libvirt --remove-service=https --permanent
+        sudo firewall-cmd --zone=libvirt --remove-service=nfs --permanent
         sudo firewall-cmd --zone=libvirt --remove-service=ocpapi --permanent
         sudo firewall-cmd --zone=libvirt --remove-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
         sudo firewall-cmd --reload
