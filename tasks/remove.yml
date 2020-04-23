@@ -73,7 +73,7 @@
       become: true
       ignore_errors: yes
       shell: |
-        sudo firewall-cmd --zone=libvirt --add-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
+        sudo firewall-cmd --zone=libvirt --remove-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
         sudo firewall-cmd --reload
       when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "8") or
             (ansible_distribution == "RedHat" and ansible_distribution_major_version == "8")
