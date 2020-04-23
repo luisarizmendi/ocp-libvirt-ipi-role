@@ -286,7 +286,7 @@
           - "   https://{{ webconsoleurl.stdout }}      "
           - "                                                                                                        "
           - "                                                                                                        "
-          - "   Username: kubeadmin     Password: {{ kubeadminpass.stdout  }}                                        "
+          - "   Username: kubeadmin     Password: {{ kubeadminpass.stdout  }}                                            "
           - "                                                                                                        "
           - "***********************************************************************************************         "
       when: ocp_create_users  != "true"
