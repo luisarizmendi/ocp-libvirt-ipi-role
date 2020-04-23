@@ -34,3 +34,13 @@
       when: kvm_firewall == "iptables"
 
 
+    - name: Configure Firewalld
+      become: true
+      ignore_errors: yes
+      shell: |
+        sudo firewall-cmd --zone=public --add-service=http --permanent
+        sudo firewall-cmd --zone=public --add-service=https --permanent
+        sudo firewall-cmd --zone=public --add-service=ocpapi --permanent
+        sudo firewall-cmd --reload
+      when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "8") or
+            (ansible_distribution == "RedHat" and ansible_distribution_major_version == "8")
