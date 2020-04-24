@@ -81,18 +81,6 @@ There are some variables that you will need to modify to configure the environme
 
       default: "4.4.0"
 
-* ocp_git_branch
-
-      description: OpenShift installer branch name from https://github.com/openshift/installer
-
-      default: "release-4.4"
-
-* ocp_install_install_release_image_override
-
-      description: OCP release image from https://quay.io/repository/openshift-release-dev/ocp-release?tag=latest&tab=tags
-
-      default: "quay.io/openshift-release-dev/ocp-release:4.4.0-rc.8-x86_64"
-
 * ocp_master_memory
 
       description: Memory (in MB) for Master nodes
@@ -206,7 +194,7 @@ ansible-galaxy install luisarizmendi.ocp_libvirt_ipi_role
 
 You need to create a playbook (let's say `ocp_libvirt_ipi.yaml`), an inventory file with the KVM node details and you are good to import the role.
 
-Find below a playbook example where we call the role and include the variables to customize the environment
+Find below a playbook example where we call the role and include the variables to customize the environment ([release name can be found here](https://mirror.openshift.com/pub/openshift-v4/clients/ocp))
 
 ```
 ---
@@ -216,15 +204,13 @@ Find below a playbook example where we call the role and include the variables t
       vars:
         ocp_install_file_path: "ocp-config/install-config.yaml"
         ocp_release: "4.4.0-rc.8"
-        ocp_git_branch: release-4.4
-        ocp_install_install_release_image_override: "quay.io/openshift-release-dev/ocp-release:4.4.0-rc.8-x86_64"
         ocp_master_memory: 16384
         ocp_master_cpu: 4
         ocp_master_disk: 150
         ocp_worker_memory: 20480
         ocp_worker_cpu: 4
         ocp_worker_disk: 150
-        kvm_interface: eno1
+        kvm_interface: "System eno1"
 ```
 
 Inventory file does not need any fancy stuff, this is an example:
@@ -257,6 +243,9 @@ Or to remove (`tags` = `remove`) OpenShift and clean up the node:
 ```
 ansible-playbook -vv -i <path to inventory> --tags remove <path to playbook>
 ```
+
+
+[If you still have doubts, you can find an example of all files here.](https://github.com/luisarizmendi/ocp-libvirt-ipi)
 
 
 Author Information

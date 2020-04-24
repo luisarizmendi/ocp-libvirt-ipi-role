@@ -51,12 +51,9 @@ ocp_cluster_net_gw: "192.168.126.1"
 
 ## VARS because we have to build the installer (no default libvirt support)
 ocp_openshift_installer_repo: "https://github.com/openshift/installer"
-ocp_git_branch: "release-4.4"
+ocp_git_branch: "release-4.{{  ansible_nodename.split(".")[1] | lower }}"
 
-ocp_install_install_release_image_override: "quay.io/openshift-release-dev/ocp-release:4.4.0-rc.8-x86_64"
 
+ocp_install_install_release_image_registry: "quay.io/openshift-release-dev/ocp-release"
 
 ocp_create_users: "true"
-
-
-
