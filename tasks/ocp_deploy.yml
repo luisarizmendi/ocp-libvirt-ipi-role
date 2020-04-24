@@ -19,7 +19,7 @@
     - name: Clone Openshift installer repo
       git:
         repo: "{{ ocp_openshift_installer_repo }}"
-        version: "{{ ocp_git_branch }}"
+        version: release-4.{{  ocp_release.split(".")[1] | lower }}
         dest: "{{ ansible_env.HOME }}/go/src/github.com/openshift/installer"
         clone: yes
         force: yes
@@ -48,7 +48,6 @@
     - name: Build the Openshift installer with libvirt support
       shell: |
         cd {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/
-        #git reset --hard origin/{{ ocp_git_branch }}
         TAGS=libvirt hack/build.sh
 
 ################
