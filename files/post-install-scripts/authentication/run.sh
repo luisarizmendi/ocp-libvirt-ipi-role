@@ -5,34 +5,34 @@ echo "Configuring Authentication"
 echo "****************************"
 
 ## Create htpasswd file with users
-#sudo yum install -y httpd-tools
-#htpasswd -c -B -b users.htpasswd clusteradmin R3dhat01
-#htpasswd -b users.htpasswd viewuser R3dhat01
-#htpasswd -b users.htpasswd user1 R3dhat01
-#htpasswd -b users.htpasswd user2 R3dhat01
-#htpasswd -b users.htpasswd user3 R3dhat01
-#htpasswd -b users.htpasswd user4 R3dhat01
-#htpasswd -b users.htpasswd user5 R3dhat01
-#htpasswd -b users.htpasswd user6 R3dhat01
-#htpasswd -b users.htpasswd user7 R3dhat01
-#htpasswd -b users.htpasswd user8 R3dhat01
-#htpasswd -b users.htpasswd user9 R3dhat01
-#htpasswd -b users.htpasswd user10 R3dhat01
-#htpasswd -b users.htpasswd user11 R3dhat01
-#htpasswd -b users.htpasswd user12 R3dhat01
-#htpasswd -b users.htpasswd user13 R3dhat01
-#htpasswd -b users.htpasswd user14 R3dhat01
-#htpasswd -b users.htpasswd user15 R3dhat01
-#htpasswd -b users.htpasswd user16 R3dhat01
-#htpasswd -b users.htpasswd user17 R3dhat01
-#htpasswd -b users.htpasswd user18 R3dhat01
-#htpasswd -b users.htpasswd user19 R3dhat01
-#htpasswd -b users.htpasswd user20 R3dhat01
-#htpasswd -b users.htpasswd user21 R3dhat01
-#htpasswd -b users.htpasswd user22 R3dhat01
-#htpasswd -b users.htpasswd user23 R3dhat01
-#htpasswd -b users.htpasswd user24 R3dhat01
-#htpasswd -b users.htpasswd user25 R3dhat01
+sudo yum install -y httpd-tools
+htpasswd -c -B -b users.htpasswd clusteradmin $CLUSTERADMIN_PASSWORD
+htpasswd -b users.htpasswd viewuser $USERS_PASSWORD
+htpasswd -b users.htpasswd user1 $USERS_PASSWORD
+htpasswd -b users.htpasswd user2 $USERS_PASSWORD
+htpasswd -b users.htpasswd user3 $USERS_PASSWORD
+htpasswd -b users.htpasswd user4 $USERS_PASSWORD
+htpasswd -b users.htpasswd user5 $USERS_PASSWORD
+htpasswd -b users.htpasswd user6 $USERS_PASSWORD
+htpasswd -b users.htpasswd user7 $USERS_PASSWORD
+htpasswd -b users.htpasswd user8 $USERS_PASSWORD
+htpasswd -b users.htpasswd user9 $USERS_PASSWORD
+htpasswd -b users.htpasswd user10 $USERS_PASSWORD
+htpasswd -b users.htpasswd user11 $USERS_PASSWORD
+htpasswd -b users.htpasswd user12 $USERS_PASSWORD
+htpasswd -b users.htpasswd user13 $USERS_PASSWORD
+htpasswd -b users.htpasswd user14 $USERS_PASSWORD
+htpasswd -b users.htpasswd user15 $USERS_PASSWORD
+htpasswd -b users.htpasswd user16 $USERS_PASSWORD
+htpasswd -b users.htpasswd user17 $USERS_PASSWORD
+htpasswd -b users.htpasswd user18 $USERS_PASSWORD
+htpasswd -b users.htpasswd user19 $USERS_PASSWORD
+htpasswd -b users.htpasswd user20 $USERS_PASSWORD
+htpasswd -b users.htpasswd user21 $USERS_PASSWORD
+htpasswd -b users.htpasswd user22 $USERS_PASSWORD
+htpasswd -b users.htpasswd user23 $USERS_PASSWORD
+htpasswd -b users.htpasswd user24 $USERS_PASSWORD
+htpasswd -b users.htpasswd user25 $USERS_PASSWORD
 
 
 # Assign htpasswd file to auth provisioner and enable provisioner

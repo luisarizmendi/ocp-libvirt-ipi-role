@@ -55,3 +55,5 @@ ocp_openshift_installer_repo: "https://github.com/openshift/installer"
 ocp_install_install_release_image_registry: "quay.io/openshift-release-dev/ocp-release"
 
 ocp_create_users: "true"
+ocp_users_password: "R3dhat01"
+ocp_clusteradmin_password: "R3dhat01"

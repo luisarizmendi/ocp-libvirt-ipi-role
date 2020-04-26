@@ -262,7 +262,7 @@
       when: nfs_storage  == "true"
 
     - name: Configure Local users
-      shell: "cd {{ ocp_install_path }}/post-install/authentication/  ; chmod +x run.sh ; ./run.sh "
+      shell: "export CLUSTERADMIN_PASSWORD='{{ ocp_clusteradmin_password }}' ; export USERS_PASSWORD='{{ ocp_users_password }}'; cd {{ ocp_install_path }}/post-install/authentication/  ; chmod +x run.sh ; ./run.sh "
       when: ocp_create_users  == "true"
 
     - name: Get Web Console URL
@@ -302,9 +302,9 @@
           - "   https://{{ webconsoleurl.stdout }}     "
           - "                                                                                                        "
           - "                                                                                                        "
-          - "   htpasswd_provider - Cluster Admin         Username: clusteradmin  Password: R4dhat01                 "
-          - "   htpasswd_provider - Cluster Readonly      Username: viewuser      Password: R4dhat01                 "
-          - "   htpasswd_provider - Regular User (1-25)   Username: userXX        Password: R4dhat01                 "
+          - "   htpasswd_provider - Cluster Admin         Username: clusteradmin  Password: {{ ocp_clusteradmin_password }} "
+          - "   htpasswd_provider - Cluster Readonly      Username: viewuser      Password: {{ ocp_users_password }} "
+          - "   htpasswd_provider - Regular User (1-25)   Username: userXX        Password: {{ ocp_users_password }} "
           - "   kube:admin        - system:admin          Username: kubeadmin     Password: {{ kubeadminpass.stdout  }}  "
           - "                                                                                                        "
           - "   ***********************************************************************************************      "
