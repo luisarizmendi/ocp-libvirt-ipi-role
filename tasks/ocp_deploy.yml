@@ -302,15 +302,12 @@
           - "   https://{{ webconsoleurl.stdout }}     "
           - "                                                                                                        "
           - "                                                                                                        "
-<<<<<<< HEAD
           - "   htpasswd_provider - Cluster Admin         Username: clusteradmin  Password: {{ ocp_clusteradmin_password }} "
           - "   htpasswd_provider - Cluster Readonly      Username: viewuser      Password: {{ ocp_users_password }} "
           - "   htpasswd_provider - Regular User (1-25)   Username: userXX        Password: {{ ocp_users_password }} "
-=======
-          - "   htpasswd_provider - Cluster Admin         Username: clusteradmin  Password: R3dhat01                 "
-          - "   htpasswd_provider - Cluster Readonly      Username: viewuser      Password: R3dhat01                 "
-          - "   htpasswd_provider - Regular User (1-25)   Username: userXX        Password: R3dhat01                 "
->>>>>>> fcc394683042df84bfd9063ed83746683783ba03
+          - "   htpasswd_provider - Cluster Admin         Username: clusteradmin  Password: {{ ocp_users_password }} "
+          - "   htpasswd_provider - Cluster Readonly      Username: viewuser      Password: {{ ocp_users_password }} "
+          - "   htpasswd_provider - Regular User (1-25)   Username: userXX        Password: {{ ocp_users_password }} "
           - "   kube:admin        - system:admin          Username: kubeadmin     Password: {{ kubeadminpass.stdout  }}  "
           - "                                                                                                        "
           - "   ***********************************************************************************************      "
