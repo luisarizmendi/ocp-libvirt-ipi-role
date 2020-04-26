@@ -43,6 +43,7 @@
         iptables -D PREROUTING -t nat -i {{ kvm_interface }} -p tcp --dport 80 -j DNAT --to $APPS_VIP:80
         iptables -D FORWARD -p tcp -d $APPS_VIP --dport 80 -j ACCEPT
         iptables -D FORWARD -i any -o any -j ACCEPT
+      when: kvm_firewall == "iptables"
 
 
 
@@ -50,41 +51,38 @@
       become: true
       ignore_errors: yes
       shell: |
-        DEFAULT_ZONE=$(sudo firewall-cmd --get-default-zone)
-        sudo firewall-cmd --remove-rich-rule "rule service name="libvirt" reject" --permanent
-        sudo firewall-cmd --zone=$DEFAULT_ZONE --remove-service=libvirt --permanent
-        sudo firewall-cmd --zone=$DEFAULT_ZONE --remove-interface=tt0  --permanent
-        sudo firewall-cmd --zone=$DEFAULT_ZONE --remove-interface=virbr0  --permanent
-        sudo firewall-cmd --reload
+        IFACE=$(nmcli con show | grep "{{ kvm_interface }}" | awk '{print $5}')
+        ZONE_EXT=$(firewall-cmd --list-all-zones | grep -B 3 $IFACE | head -n 1 | awk '{print $1}')
+        # Publishing
+        if [ {{ compute.0.replicas }} -ne 0 ]
+        then
+          API_VIP={{ ocp_api_vip }}
+          APPS_VIP={{ ocp_apps_vip }}
+        else
+          API_VIP={{ ocp_api_vip }}
+          APPS_VIP={{ ocp_api_vip }}
+        fi
+        if [ {{ lb }} == "true" ]
+        then
+          API_VIP={{ ocp_cluster_net_gw }}
+          APPS_VIP={{ ocp_cluster_net_gw }}
+        fi
+        firewall-cmd --permanent --remove-forward-port=port=6443:proto=tcp:toport=6443:toaddr=$API_VIP --zone=$ZONE_EXT
+        firewall-cmd --permanent --remove-forward-port=port=443:proto=tcp:toport=443:toaddr=$APPS_VIP --zone=$ZONE_EXT
+        firewall-cmd --permanent --remove-forward-port=port=80:proto=tcp:toport=80:toaddr=$APPS_VIP --zone=$ZONE_EXT
+        firewall-cmd --zone=libvirt --remove-service=libvirt --permanent
+        firewall-cmd --zone=libvirt --remove-service=http --permanent
+        firewall-cmd --zone=libvirt --remove-service=https --permanent
+        firewall-cmd --zone=libvirt --remove-service=nfs --permanent
+        firewall-cmd --zone=libvirt --remove-service=dns --permanent
+        firewall-cmd --zone=libvirt --remove-service=ocpapi --permanent
+        firewall-cmd --zone=libvirt --remove-service=libvirttcp --permanent
+        firewall-cmd --zone=libvirt --remove-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
+        firewall-cmd --zone=$ZONE_EXT --remove-service=http --permanent
+        firewall-cmd --zone=$ZONE_EXT --remove-service=https --permanent
+        firewall-cmd --zone=$ZONE_EXT --remove-service=ocpapi --permanent
+        firewall-cmd --reload
       when: kvm_firewall == "firewalld"
-
-    - name: Configure Firewalld
-      become: true
-      ignore_errors: yes
-      shell: |
-        sudo firewall-cmd --remove-rich-rule  "rule service name="libvirt" reject" --permanent
-        sudo firewall-cmd --zone=dmz --remove-interface=virbr0 --permanent
-        sudo firewall-cmd --zone=dmz --remove-interface=tt0 --permanent
-        sudo firewall-cmd --zone=dmz --remove-service=libvirt --permanent
-        sudo firewall-cmd --reload
-      when: ansible_distribution  == "Fedora"
-
-    - name: Configure Firewalld
-      become: true
-      ignore_errors: yes
-      shell: |
-        sudo firewall-cmd --zone=libvirt --remove-service=libvirt --permanent
-        sudo firewall-cmd --zone=libvirt --remove-service=http --permanent
-        sudo firewall-cmd --zone=libvirt --remove-service=https --permanent
-        sudo firewall-cmd --zone=libvirt --remove-service=nfs --permanent
-        sudo firewall-cmd --zone=libvirt --remove-service=ocpapi --permanent
-        sudo firewall-cmd --zone=libvirt --remove-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
-        sudo firewall-cmd --zone=public --remove-service=http --permanent
-        sudo firewall-cmd --zone=public --remove-service=https --permanent
-        sudo firewall-cmd --zone=public --remove-service=ocpapi --permanent
-        sudo firewall-cmd --reload
-      when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "8") or
-            (ansible_distribution == "RedHat" and ansible_distribution_major_version == "8")
 
 
     - name: Remove Load Balancer

@@ -17,6 +17,21 @@
           - tar
         state: present
 
+    - name: Installing firewalld
+      yum:
+        name:
+          - firewalld
+        state: present
+      when: kvm_firewall == "firewalld"
+
+    - name: Enable and Start firewalld
+      become: true
+      systemd:
+        name: firewalld
+        state: started
+        enabled: yes
+      when: kvm_firewall == "firewalld"
+
 
     # Update qemu to +2.4 because option fw_cfg added in 2.4
     #  "qemu-kvm: -fw_cfg: invalid option"
@@ -239,40 +254,21 @@
       become: true
       ignore_errors: yes
       shell: |
-        DEFAULT_ZONE=$(sudo firewall-cmd --get-default-zone)
-        sudo firewall-cmd --add-rich-rule "rule service name="libvirt" reject" --permanent
-        sudo firewall-cmd --zone=$DEFAULT_ZONE --add-service=libvirt --permanent
-        sudo firewall-cmd --zone=$DEFAULT_ZONE --change-interface=tt0  --permanent
-        sudo firewall-cmd --zone=$DEFAULT_ZONE --change-interface=virbr0  --permanent
-        sudo firewall-cmd --reload
+        firewall-cmd --permanent --new-service=ocpapi
+        firewall-cmd --permanent --new-service=libvirttcp
+        firewall-cmd --permanent --service=ocpapi --add-port=6443/tcp
+        firewall-cmd --permanent --service=libvirttcp --add-port=16509/tcp
+        firewall-cmd --zone=libvirt --add-service=libvirt --permanent
+        firewall-cmd --zone=libvirt --add-service=http --permanent
+        firewall-cmd --zone=libvirt --add-service=https --permanent
+        firewall-cmd --zone=libvirt --add-service=dns --permanent
+        firewall-cmd --zone=libvirt --add-service=nfs --permanent
+        firewall-cmd --zone=libvirt --add-service=ocpapi --permanent
+        firewall-cmd --zone=libvirt --add-service=libvirttcp --permanent
+        firewall-cmd --zone=libvirt --add-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
+        firewall-cmd --reload
       when: kvm_firewall == "firewalld"
 
-    - name: Configure Firewalld
-      become: true
-      ignore_errors: yes
-      shell: |
-        sudo firewall-cmd --add-rich-rule "rule service name="libvirt" reject" --permanent
-        sudo firewall-cmd --zone=dmz --change-interface=virbr0 --permanent
-        sudo firewall-cmd --zone=dmz --change-interface=tt0 --permanent
-        sudo firewall-cmd --zone=dmz --add-service=libvirt --permanent
-        sudo firewall-cmd --reload
-      when: ansible_distribution  == "Fedora"
-
-    - name: Configure Firewalld
-      become: true
-      ignore_errors: yes
-      shell: |
-        sudo firewall-cmd --zone=libvirt --add-service=libvirt --permanent
-        sudo firewall-cmd --zone=libvirt --add-service=http --permanent
-        sudo firewall-cmd --zone=libvirt --add-service=https --permanent
-        sudo firewall-cmd --zone=libvirt --add-service=nfs --permanent
-        sudo firewall-cmd --permanent --new-service=ocpapi
-        sudo firewall-cmd --permanent --service=ocpapi --add-port=6443/tcp
-        sudo firewall-cmd --zone=libvirt --add-service=ocpapi --permanent
-        sudo firewall-cmd --zone=libvirt --add-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
-        sudo firewall-cmd --reload
-      when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "8") or
-            (ansible_distribution == "RedHat" and ansible_distribution_major_version == "8")
 
     - name: Create a directory /etc/NetworkManager/conf.d if it does not exist
       file:

@@ -9,7 +9,7 @@
 kvm_install: "true"
 kvm_configure: "true"
 kvm_libvirt_network_gw: "192.168.122.1"
-kvm_firewall: "iptables"
+kvm_firewall: "firewalld"
 kvm_interface: "eth0"
 kvm_ext_dns: "8.8.8.8"
 
