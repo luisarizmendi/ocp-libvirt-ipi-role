@@ -145,6 +145,12 @@ There are other variables that shouldn't be modified unless you have
 
       default: "8.8.8.8"
 
+* kvm_nestedvirtualization
+
+      description: Enable nested virtualization support in KVM (for OCP CNV testing)
+
+      default: "False"
+
 * nfs_storage
 
       description: If "true" NFS storage and a storageclass for dynamic PV provisioning (it’s no supported in Openshift, but it works for testing) will be configured. ou could want to avoid configuring NFS if, for example, you want to install on a laptop and you don’t want to install anything else on your machine. If false only ephemeral storage will be available after the install.
@@ -223,6 +229,7 @@ Find below a playbook example where we call the role and include the variables t
         ocp_worker_cpu: 4
         ocp_worker_disk: 150
         kvm_interface: "System eno1"
+        kvm_nestedvirtualization: "true"
 ```
 
 Inventory file does not need any fancy stuff, this is an example:

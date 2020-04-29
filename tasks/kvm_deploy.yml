@@ -332,12 +332,13 @@
     - name: Configure DNS external servers
       shell: 'echo "nameserver {{ kvm_ext_dns }}" >> /etc/resolv.conf'
 
- #   - name: restart network
- #     become: true
- #     systemd:
- #       name: NetworkManager
- #       state: restarted
-
-
- #   - name: Wait for SSH connection
- #     local_action: wait_for host={{ ansible_host }} delay=15 port={{ ansible_port }} timeout=300 state=started
+    - name: Enable Nested Virtualization
+      tags: install
+      become: true
+      block:
+        - name: Change /etc/modprobe.d/kvm.conf settings
+          shell: |
+            cat /proc/cpuinfo  | grep "model name" | head -n 1 | grep -i Intel
+            if [ $? -ne 0 ]; then   PROC=amd; else     PROC=intel; fi
+            sed -i "s/#options kvm_$PROC nested=1/options kvm_$PROC nested=1/g"  /etc/modprobe.d/kvm.conf
+      when: kvm_nestedvirtualization == "true"

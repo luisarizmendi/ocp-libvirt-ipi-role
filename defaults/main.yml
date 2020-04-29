@@ -12,6 +12,7 @@ kvm_libvirt_network_gw: "192.168.122.1"
 kvm_firewall: "firewalld"
 kvm_interface: "eth0"
 kvm_ext_dns: "8.8.8.8"
+kvm_nestedvirtualization: "false"
 
 nfs_storage: "true"
 lb: "true"
