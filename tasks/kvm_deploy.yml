@@ -333,12 +333,10 @@
       shell: 'echo "nameserver {{ kvm_ext_dns }}" >> /etc/resolv.conf'
 
     - name: Enable Nested Virtualization
-      tags: install
-      become: true
-      block:
-        - name: Change /etc/modprobe.d/kvm.conf settings
-          shell: |
-            cat /proc/cpuinfo  | grep "model name" | head -n 1 | grep -i Intel
-            if [ $? -ne 0 ]; then   PROC=amd; else     PROC=intel; fi
-            sed -i "s/#options kvm_$PROC nested=1/options kvm_$PROC nested=1/g"  /etc/modprobe.d/kvm.conf
+      shell: |
+        cat /proc/cpuinfo  | grep "model name" | head -n 1 | grep -i Intel
+        if [ $? -ne 0 ]; then   PROC=amd; else     PROC=intel; fi
+        modprobe -r kvm_$PROC
+        modprobe kvm_$PROC nested=1
+        sed -i "s/#options kvm_$PROC nested=1/options kvm_$PROC nested=1/g"  /etc/modprobe.d/kvm.conf
       when: kvm_nestedvirtualization == "true"

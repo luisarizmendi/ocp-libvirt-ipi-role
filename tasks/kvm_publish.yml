@@ -63,3 +63,59 @@
         firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=80:toaddr=$APPS_VIP --zone=$ZONE_EXT
         firewall-cmd --reload
       when: kvm_firewall == "firewalld"
+
+
+
+    - name: Access information
+      become: true
+      tags: install
+      ignore_errors: yes
+      block:
+        - name: Get Web Console URL
+          shell: "oc get route -n openshift-console | grep https | awk '{print $2}' "
+          register: webconsoleurl
+
+        - name: Get kubeadmin password
+          shell: "tail {{ ocp_install_path }}/install/.openshift_install.log | grep password: | awk -F 'password: ' '{print  substr($2, 1, length($2)-1)}'"
+          register: kubeadminpass
+
+        - name: OpenShift Web Console access
+          debug:
+            msg:
+              - "                                                                                                        "
+              - "                                                                                                        "
+              - "   ***********************************************************************************************      "
+              - "                                         WEB CONSOLE ACCESS                                             "
+              - "   ***********************************************************************************************      "
+              - "                                                                                                        "
+              - "   https://{{ webconsoleurl.stdout }}      "
+              - "                                                                                                        "
+              - "                                                                                                        "
+              - "   Username: kubeadmin     Password: {{ kubeadminpass.stdout  }}                                            "
+              - "                                                                                                        "
+              - "   ***********************************************************************************************      "
+          when: ocp_create_users  != "true"
+
+        - name: OpenShift Web Console access
+          debug:
+            msg:
+              - "                                                                                                        "
+              - "                                                                                                        "
+              - "   ***********************************************************************************************      "
+              - "                                         WEB CONSOLE ACCESS                                             "
+              - "   ***********************************************************************************************      "
+              - "                                                                                                        "
+              - "   https://{{ webconsoleurl.stdout }}     "
+              - "                                                                                                        "
+              - "                                                                                                        "
+              - "   htpasswd_provider - Cluster Admin         Username: clusteradmin  Password: {{ ocp_clusteradmin_password }} "
+              - "   htpasswd_provider - Cluster Readonly      Username: viewuser      Password: {{ ocp_users_password }} "
+              - "   htpasswd_provider - Regular User (1-25)   Username: userXX        Password: {{ ocp_users_password }} "
+              - "   htpasswd_provider - Cluster Admin         Username: clusteradmin  Password: {{ ocp_users_password }} "
+              - "   htpasswd_provider - Cluster Readonly      Username: viewuser      Password: {{ ocp_users_password }} "
+              - "   htpasswd_provider - Regular User (1-25)   Username: userXX        Password: {{ ocp_users_password }} "
+              - "   kube:admin        - system:admin          Username: kubeadmin     Password: {{ kubeadminpass.stdout  }}  "
+              - "                                                                                                        "
+              - "   ***********************************************************************************************      "
+          when: ocp_create_users  == "true"
+      when: kvm_nestedvirtualization == "true"
