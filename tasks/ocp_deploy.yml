@@ -283,7 +283,7 @@
       become: true
       ignore_errors: yes
       shell: |
-        NET=$(virsh net-list | grep {{ metadata.name }})
+        NET=$(virsh net-list | grep {{ metadata.name }} |  awk '{print $1}')
         virsh net-dumpxml $NET | grep "host mac" | awk '$1=$1' | awk '{ sub(/[ \t]+$/, ""); print }' > tmp
         sed -i "s/^/virsh net-update $NET add-last ip-dhcp-host \"/" tmp
         sed -i 's/$/\"  --config --parent-index 0/' tmp
