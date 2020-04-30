@@ -149,7 +149,7 @@ There are other variables that shouldn't be modified unless you have
 
       description: Enable nested virtualization support in KVM (for OCP CNV testing)
 
-      default: "False"
+      default: "True"
 
 * nfs_storage
 
@@ -229,7 +229,6 @@ Find below a playbook example where we call the role and include the variables t
         ocp_worker_cpu: 4
         ocp_worker_disk: 150
         kvm_interface: "System eno1"
-        kvm_nestedvirtualization: "true"
 ```
 
 Inventory file does not need any fancy stuff, this is an example:
