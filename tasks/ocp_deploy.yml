@@ -265,6 +265,33 @@
       shell: "export CLUSTERADMIN_PASSWORD='{{ ocp_clusteradmin_password }}' ; export USERS_PASSWORD='{{ ocp_users_password }}'; cd {{ ocp_install_path }}/post-install/authentication/  ; chmod +x run.sh ; ./run.sh "
       when: ocp_create_users  == "true"
 
+
+
+
+    - name: Enable VM auto-start
+      become: true
+      ignore_errors: yes
+      shell: |
+        VMS=$(virsh list | grep 'master\|worker' | awk '{print $2}')
+        for i in $VMS
+        do
+          virsh autostart $i
+        done
+
+
+    - name: Persist dhcp host entries across reboots
+      become: true
+      ignore_errors: yes
+      shell: |
+        NET=$(virsh net-list | grep "{{ metadata.name }}" )
+        virsh net-dumpxml $NET | grep "host mac" | awk '$1=$1' | awk '{ sub(/[ \t]+$/, ""); print }' > tmp
+        sed -i "s/^/virsh net-update $NET add-last ip-dhcp-host \"/" tmp
+        sed -i 's/$/\"  --config --parent-index 0/' tmp
+        sed -i '1i\''#!/bin/bash' tmp
+        chmod +x tmp
+        ./tmp
+        rm -rf tmp
+
     - name: Access information
       become: true
       tags: install

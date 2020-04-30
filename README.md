@@ -149,7 +149,7 @@ There are other variables that shouldn't be modified unless you have
 
       description: Enable nested virtualization support in KVM (for OCP CNV testing)
 
-      default: "True"
+      default: "False"
 
 * nfs_storage
 
@@ -229,6 +229,7 @@ Find below a playbook example where we call the role and include the variables t
         ocp_worker_cpu: 4
         ocp_worker_disk: 150
         kvm_interface: "System eno1"
+        kvm_nestedvirtualization: "true"
 ```
 
 Inventory file does not need any fancy stuff, this is an example:
@@ -406,6 +407,11 @@ You have to wait until the Kubernetes API is ready after launching the install a
 Just in case you didn't notice in the variable name, this is not supported, unstable, not safe and for non HA (of course) environments.
 
 Why not all variables are named as this one? We could just get rid of documentation in that case.
+
+
+### Persistence across reboots
+
+Terraform libvirt plugin does not make dhcp host entries persistent, so if you reboot the KVM node the master nodes won't come up again since they will have the 'api' hostname instead of their proper name , thus the node won't be recognized by ETCD. There are multiple ways to fix this, I decided to do the quick-and-dirty way, just reconfiguring those entries in the libvirt network as persistent. 
 
 Enjoy
 -----------------
