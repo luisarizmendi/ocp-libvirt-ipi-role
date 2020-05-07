@@ -51,7 +51,7 @@
       become: true
       ignore_errors: yes
       shell: |
-        IFACE=$(nmcli con show | grep "{{ kvm_interface }}" | awk '{print $5}')
+        IFACE=$(nmcli con show "{{ kvm_interface }}" | grep connection.interface-name | awk '{print $2}')
         ZONE_EXT=$(firewall-cmd --list-all-zones | grep -B 3 $IFACE | head -n 1 | awk '{print $1}')
         # Publishing
         if [ {{ compute.0.replicas }} -ne 0 ]
