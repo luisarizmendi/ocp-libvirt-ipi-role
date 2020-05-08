@@ -1,4 +1,4 @@
-Role Name
+OCP libvirt IPI
 =========
 
 Deploy OpenShift 4 on a CentOS/RHEL 7/8 or Fedora KVM using libvirt IPI
@@ -411,7 +411,7 @@ Why not all variables are named as this one? We could just get rid of documentat
 
 ### Persistence across reboots
 
-Terraform libvirt plugin does not make dhcp host entries persistent, so if you reboot the KVM node the master nodes won't come up again since they will have the 'api' hostname instead of their proper name , thus the node won't be recognized by ETCD. There are multiple ways to fix this, I decided to do the quick-and-dirty way, just reconfiguring those entries in the libvirt network as persistent. 
+Terraform libvirt plugin does not make dhcp host entries persistent, so if you reboot the KVM node the master nodes won't come up again since they will have the 'api' hostname instead of their proper name , thus the node won't be recognized by ETCD. There are multiple ways to fix this, I decided to do the quick-and-dirty way, just reconfiguring those entries in the libvirt network as persistent.
 
 Enjoy
 -----------------
