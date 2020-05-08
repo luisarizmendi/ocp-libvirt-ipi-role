@@ -1,2 +1,0 @@
-NFS_SERVER=192.168.126.1
-NFS_PATH="/export/ocp/static/registry" 
