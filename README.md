@@ -183,7 +183,7 @@ There are other variables that shouldn't be modified unless you have
 
 * ocp_create_users
 
-      description: If "true" local users will be created. One cluster-wide admin (clusteradmin), 25 users (user1 - user25) included in a group ´developers´ and one cluster wide read only user (viewuser) included in a group called `reviewers`. You can disable it by configuring `ocp_create_users` to `false` or change the usernames or passwords modifying the htpasswd file located in the post-install-scripts directory inside the `files` directory
+      description: If "true" local users will be created. One cluster-wide admin (clusteradmin), 25 users (user1 - user25) included in a group ´developers´ and one cluster wide read only user (viewuser) included in a group called `reviewers`. You can disable it by configuring `ocp_create_users` to `false` or change the usernames or passwords modifying the `ocp_users_password` and `ocp_clusteradmin_password` variables
 
       default: "true"
 
