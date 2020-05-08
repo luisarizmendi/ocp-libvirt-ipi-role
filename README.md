@@ -53,7 +53,7 @@ networking:
   - 172.30.0.0/16
 platform:
   libvirt:
-    URI: qemu+tcp://< kvm ip >/system
+    URI: qemu+tcp://< kvm ip on the "kvm_interface" interface >/system
     network:
       if: tt0
 publish: External
