@@ -176,7 +176,7 @@
           copy:
             dest: "/etc/exports"
             content: |
-              /export/ocp	*(rw,sync,root_squash)
+              /export/ocp	*(rw,sync,no_root_squash)
 
         - name: Enable nfs-server
           systemd:
