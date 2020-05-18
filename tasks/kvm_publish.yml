@@ -118,4 +118,4 @@
               - "                                                                                                        "
               - "   ***********************************************************************************************      "
           when: ocp_create_users  == "true"
-      when: kvm_nestedvirtualization == "true"
+      when: kvm_publish == "true"
