@@ -81,12 +81,21 @@
       shell: "cp {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/bin/openshift-install {{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/"
 
 
+### Using shell with curl and tar instead of unarchive to avoid "Request failed: <urlopen error _ssl.c:880: The handshake operation timed out>" problem
+#    - name: Download Openshift client
+#      unarchive:
+#        src: "{{ ocp_mirror }}/{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz"
+#        dest: "{{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/"
+#        remote_src: yes
+#        creates: "{{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/oc"
     - name: Download Openshift client
-      unarchive:
-        src: "{{ ocp_mirror }}/{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz"
-        dest: "{{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/"
-        remote_src: yes
-        creates: "{{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/oc"
+      shell: |
+        curl --compressed -J -L -o {{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz  {{ ocp_mirror }}/{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz
+        tar -C {{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/  -xvf  {{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz
+
+
+
+
 
     - name: Create a symbolic link
       ignore_errors: yes
