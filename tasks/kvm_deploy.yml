@@ -36,26 +36,29 @@
     # Update qemu to +2.4 because option fw_cfg added in 2.4
     #  "qemu-kvm: -fw_cfg: invalid option"
     #  https://github.com/qemu/qemu/commit/81b2b81062612e
-    - name: Add repos centos-release-openstack-stein
-      when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or
-            (ansible_distribution == "RedHat" and ansible_distribution_major_version == "7")
+    - name: Add repos centos-release-openstack-stein (Centos7)
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
       yum:
         name: centos-release-openstack-stein
         state: present
 
-    - name: Disable all openstack repos except centos-qemu-ev
-      when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or
-            (ansible_distribution == "RedHat" and ansible_distribution_major_version == "7")
+    - name: Disable all openstack repos except centos-qemu-ev (Centos7)
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
       command: "yum-config-manager -q --disable centos-ceph-nautilus centos-nfs-ganesha28 centos-openstack-stein"
 
-    - name: Upgrade all packages, include update qemu-kvm to >2.4
+    - name: Add repo for rhel-7-server-rhv-4-mgmt-agent-rpms (RHEL7)
+      when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
+      #become: true
+      shell: |
+        subscription-manager repos --enable="rhel-7-server-rhv-4-mgmt-agent-rpms"
+
+    - name: Upgrade all packages, include update qemu-kvm to >2.4 (Centos7 And RHEL7)
       when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or
             (ansible_distribution == "RedHat" and ansible_distribution_major_version == "7")
     # because we added repo centos-qemu-ev from openstack
       yum:
         name: '*'
         state: latest
-
 
 
     - name: Enable and Start network
