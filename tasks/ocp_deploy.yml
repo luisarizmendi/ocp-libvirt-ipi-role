@@ -6,7 +6,7 @@
   when: ocp_prepare == "true"
   tags: install
   block:
-    - name: Install dependecies
+    - name: Install dependencies
       become: true
       yum:
         name:
