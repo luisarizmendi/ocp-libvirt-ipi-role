@@ -5,6 +5,12 @@
 - name: Compile OpenShift installer (libvirt is in development)
   when: ocp_prepare == "true"
   tags: install
+  module_defaults:
+    shell:
+      chdir: "{{ kvm_workdir }}"
+  environment:
+    GOPATH: "{{ kvm_workdir }}/go"
+    GOCACHE: "{{ kvm_workdir }}/go-build"
   block:
     - name: Install dependencies
       become: true
@@ -20,34 +26,30 @@
       git:
         repo: "{{ ocp_openshift_installer_repo }}"
         version: release-4.{{  ocp_release.split(".")[1] | lower }}
-        dest: "{{ ansible_env.HOME }}/go/src/github.com/openshift/installer"
+        dest: "{{ kvm_workdir }}/go/src/github.com/openshift/installer"
         clone: yes
         force: yes
 
     ## NOTE: We need to modify manifests because of https://github.com/openshift/installer/issues/1007 otherwise the console won't come up
     - name: Change local_only to solve issue 1007
       shell: |
-        sed -i "s/local_only = true/local_only = true\n    forwarders { \n        address = \"{{ kvm_libvirt_network_gw }}\"\n        domain = \"apps.\${var.cluster_domain}\" \n    }/g" {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/data/data/libvirt/main.tf
-
-
+        sed -i "s/local_only = true/local_only = true\n    forwarders { \n        address = \"{{ kvm_libvirt_network_gw }}\"\n        domain = \"apps.\${var.cluster_domain}\" \n    }/g" {{ kvm_workdir }}/go/src/github.com/openshift/installer/data/data/libvirt/main.tf
 
     - name: Change timeouts to 180m
       shell: |
-        sed -i 's/apiTimeout := 20/apiTimeout := 180/g' {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
-        sed -i 's/timeout := 40/timeout := 180/g' {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
-        sed -i 's/timeout := 30/timeout := 180/g' {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
-        sed -i 's/consoleRouteTimeout := 10/consoleRouteTimeout := 60/g' {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
-
+        sed -i 's/apiTimeout := 20/apiTimeout := 180/g' {{ kvm_workdir }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
+        sed -i 's/timeout := 40/timeout := 180/g' {{ kvm_workdir }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
+        sed -i 's/timeout := 30/timeout := 180/g' {{ kvm_workdir }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
+        sed -i 's/consoleRouteTimeout := 10/consoleRouteTimeout := 60/g' {{ kvm_workdir }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
 
     - name: FIX master disk in code (Right now there is no other way)
       shell: |
         SIZE=$(({{ ocp_master_disk }}*1073741824))
-        sed -i "s/resource \"libvirt_volume\" \"master\" {/resource \"libvirt_volume\" \"master\" {\n  size           = ${SIZE}/g" {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/data/data/libvirt/main.tf
-
+        sed -i "s/resource \"libvirt_volume\" \"master\" {/resource \"libvirt_volume\" \"master\" {\n  size           = ${SIZE}/g" {{ kvm_workdir }}/go/src/github.com/openshift/installer/data/data/libvirt/main.tf
 
     - name: Build the Openshift installer with libvirt support
       shell: |
-        cd {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/
+        cd {{ kvm_workdir }}/go/src/github.com/openshift/installer/
         TAGS=libvirt hack/build.sh
 
 ################
@@ -56,6 +58,12 @@
 - name: Prepare OpenShift installation
   when: ocp_prepare == "true"
   tags: install
+  environment:
+    GOPATH: "{{ kvm_workdir }}/go"
+    GOCACHE: "{{ kvm_workdir }}/go-build"
+  module_defaults:
+    shell:
+      chdir: "{{ kvm_workdir }}"
   block:
     - name: Create installation directory
       file:
@@ -78,7 +86,7 @@
     #        remote_src: yes
     #        creates: "{{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/openshift-install"
     - name: Download Openshift installer
-      shell: "cp {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/bin/openshift-install {{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/"
+      shell: "cp {{ kvm_workdir }}/go/src/github.com/openshift/installer/bin/openshift-install {{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/"
 
 
 ### Using shell with curl and tar instead of unarchive to avoid "Request failed: <urlopen error _ssl.c:880: The handshake operation timed out>" problem
@@ -92,10 +100,6 @@
       shell: |
         curl --compressed -J -L -o {{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz  {{ ocp_mirror }}/{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz
         tar -C {{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/  -xvf  {{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz
-
-
-
-
 
     - name: Create a symbolic link
       ignore_errors: yes
@@ -115,22 +119,11 @@
         dest: "{{ ocp_install_path }}/install-config.yaml"
         owner: "{{ ansible_user}}"
 
-
-
     - name: Copy install-config.yaml in install dir
       shell: |
         cp {{ ocp_install_path }}/install-config.yaml {{ ocp_install_path }}/install/install-config.yaml
 
-
-
-
-
 ############ Run installation
-
-
-
-
-
 
 ### There is an issue.
 #The underlying issue is known #2632
@@ -143,9 +136,13 @@
 - name: Install OpenShift
   when: ocp_install == "true"
   tags: install
+  environment:
+    GOPATH: "{{ kvm_workdir }}/go"
+    GOCACHE: "{{ kvm_workdir }}/go-build"
+  module_defaults:
+    shell:
+      chdir: "{{ kvm_workdir }}"
   block:
-
-
     - name:  Create manifests
       shell: |
         {{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/openshift-install create manifests --dir {{ ocp_install_path }}/install/
@@ -215,12 +212,20 @@
         fi
         #############
         export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE={{ ocp_install_install_release_image_registry }}:{{ ocp_release }}-x86_64
+        export GOPATH={{ kvm_workdir }}/go
+        export GOCACHE={{ kvm_workdir }}/go-build
         {{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/openshift-install create cluster --dir {{ ocp_install_path }}/install/
 
 
 - name: OpenShift Post-Install
   when: ocp_install == "true"
   tags: install
+  environment:
+    GOPATH: "{{ kvm_workdir }}/go"
+    GOCACHE: "{{ kvm_workdir }}/go-build"
+  module_defaults:
+    shell:
+      chdir: "{{ kvm_workdir }}"
   block:
     - name: Copy kubeconfig for admin
       shell: "mkdir ~/.kube ; cp {{ ocp_install_path }}/install/auth/kubeconfig ~/.kube/config "

@@ -4,6 +4,9 @@
   when: kvm_install  == "true"
   become: true
   tags: install
+  module_defaults:
+    shell:
+      chdir: "{{ kvm_workdir }}"
   block:
     - name: Installing KVM Packages
       yum:
@@ -193,6 +196,9 @@
   when: kvm_configure  == "true"
   become: true
   tags: install
+  module_defaults:
+    shell:
+      chdir: "{{ kvm_workdir }}"
   block:
     - name: Enable IP Forwarding
       shell: "sysctl net.ipv4.ip_forward=1"
@@ -239,7 +245,6 @@
         name: libvirtd
         state: restarted
 
-
     - name: Configure Iptables
       become: true
       ignore_errors: yes
@@ -279,8 +284,6 @@
         state: directory
         mode: '0755'
 
-
-
     - name: Finish Host network configuration
       copy:
         dest:  /etc/NetworkManager/conf.d/openshift.conf
@@ -288,13 +291,11 @@
           [main]
           dns=dnsmasq
 
-
     - name: Create a directory /etc/NetworkManager/dnsmasq.d if it does not exist
       file:
         path: /etc/NetworkManager/dnsmasq.d
         state: directory
         mode: '0755'
-
 
     - name: DNS config without lb
       when: lb  != "true"

@@ -90,9 +90,10 @@
       become: true
       block:
         - name: Remove packages
+          when: remove_packages_on_destroy  == "true"
           yum:
             name:
-              - haproxy
+              - not_haproxy
             state: removed
 
 
@@ -101,12 +102,13 @@
       become: true
       block:
         - name: Remove packages
+          when: remove_packages_on_destroy  == "true"
           yum:
             state: removed
             name: "{{ item }}"
           with_items:
-            - nfs-utils
-            - rpcbind
+            - not_nfs-utils
+            - not_rpcbind
 
 
         - name: Remove NFS OCP dirs
