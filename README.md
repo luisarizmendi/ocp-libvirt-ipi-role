@@ -329,6 +329,12 @@ This is important...wait just for a moment and think about it... you can do all 
 
 #### Custom disk size in OpenShift nodes
 
+///////////////////////////
+
+NOTE: Since OpenShift 4.5 this is not needed anymore. I commented out the part that makes these changes in the source code, if you want to keep using older openshift versions you will have to re-enable that part of the playbook.
+
+///////////////////////////
+
 All (supported) IPI providers have a way to modify the created VM resources (CPU, memory and disk). In the libvirt IPI case you can modify the CPU and memory using the manifest (see below) just changing the values that are already there. [In order to change the worker nodes disk size you have to include an additional variable that is not in the manifest by default](https://github.com/openshift/installer/issues/2338), but it works. The problem [is that the code is not (yet?) prepared to allow master nodes disk size changes](https://github.com/openshift/cluster-api-provider-libvirt/pull/175) so the only way to do it is by [adding the 'size' variable](https://github.com/openshift/installer/pull/2652/commits/5e46b881675cda0613233574b0b70531b4a82a31) in the code in file `data/data/libvirt/main.tf` including the size in bytes.
 
 ```
