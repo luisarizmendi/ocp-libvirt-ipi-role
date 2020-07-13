@@ -1,4 +1,18 @@
 ---
+- name: Create needed directories under {{ kvm_workdir }}
+  become: true
+  tags: install
+  file:
+    path: "{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+  with_items:
+    - "{{ kvm_workdir }}"
+    - "{{ kvm_workdir }}/go"
+    - "{{ kvm_workdir }}/go-build"
+    - "{{ kvm_workdir }}/ocp"
 
 - name: Install KVM
   when: kvm_install  == "true"

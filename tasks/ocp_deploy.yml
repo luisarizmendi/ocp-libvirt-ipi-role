@@ -2,6 +2,7 @@
 
 ################
 # We need to compile with libvirt support since it's not included by default (it's in development)
+
 - name: Compile OpenShift installer (libvirt is in development)
   when: ocp_prepare == "true"
   tags: install
@@ -11,6 +12,7 @@
   environment:
     GOPATH: "{{ kvm_workdir }}/go"
     GOCACHE: "{{ kvm_workdir }}/go-build"
+    HOME: "{{ kvm_workdir }}"
   block:
     - name: Install dependencies
       become: true
@@ -61,6 +63,7 @@
   environment:
     GOPATH: "{{ kvm_workdir }}/go"
     GOCACHE: "{{ kvm_workdir }}/go-build"
+    HOME: "{{ kvm_workdir }}"
   module_defaults:
     shell:
       chdir: "{{ kvm_workdir }}"
@@ -139,6 +142,7 @@
   environment:
     GOPATH: "{{ kvm_workdir }}/go"
     GOCACHE: "{{ kvm_workdir }}/go-build"
+    HOME: "{{ kvm_workdir }}"
   module_defaults:
     shell:
       chdir: "{{ kvm_workdir }}"
@@ -223,6 +227,7 @@
   environment:
     GOPATH: "{{ kvm_workdir }}/go"
     GOCACHE: "{{ kvm_workdir }}/go-build"
+    HOME: "{{ kvm_workdir }}"
   module_defaults:
     shell:
       chdir: "{{ kvm_workdir }}"
