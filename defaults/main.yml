@@ -13,11 +13,13 @@ kvm_firewall: "firewalld"
 kvm_interface: "eth0"
 kvm_ext_dns: "8.8.8.8"
 kvm_nestedvirtualization: "true"
+kvm_workdir: "{{ ansible_env.HOME }}"
 
 nfs_storage: "true"
 lb: "true"
 
 kvm_publish: "true"
+remove_packages_on_destroy: "false"
 
 #########################################################
 ## OCP install config
@@ -25,7 +27,7 @@ ocp_prepare: "true"
 ocp_install: "true"
 
 ocp_install_file_path: "ocp-config/install-config.yaml"
-ocp_install_path: "{{ ansible_env.HOME }}/ocp"
+ocp_install_path: "{{ kvm_workdir }}/ocp"
 
 ocp_mirror: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp"
 ocp_release: "4.4.0"

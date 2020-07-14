@@ -1,9 +1,26 @@
 ---
+- name: Create needed directories under {{ kvm_workdir }}
+  become: true
+  tags: install
+  file:
+    path: "{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+  with_items:
+    - "{{ kvm_workdir }}"
+    - "{{ kvm_workdir }}/go"
+    - "{{ kvm_workdir }}/go-build"
+    - "{{ kvm_workdir }}/ocp"
 
 - name: Install KVM
   when: kvm_install  == "true"
   become: true
   tags: install
+  module_defaults:
+    shell:
+      chdir: "{{ kvm_workdir }}"
   block:
     - name: Installing KVM Packages
       yum:
@@ -36,26 +53,29 @@
     # Update qemu to +2.4 because option fw_cfg added in 2.4
     #  "qemu-kvm: -fw_cfg: invalid option"
     #  https://github.com/qemu/qemu/commit/81b2b81062612e
-    - name: Add repos centos-release-openstack-stein
-      when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or
-            (ansible_distribution == "RedHat" and ansible_distribution_major_version == "7")
+    - name: Add repos centos-release-openstack-stein (Centos7)
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
       yum:
         name: centos-release-openstack-stein
         state: present
 
-    - name: Disable all openstack repos except centos-qemu-ev
-      when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or
-            (ansible_distribution == "RedHat" and ansible_distribution_major_version == "7")
+    - name: Disable all openstack repos except centos-qemu-ev (Centos7)
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
       command: "yum-config-manager -q --disable centos-ceph-nautilus centos-nfs-ganesha28 centos-openstack-stein"
 
-    - name: Upgrade all packages, include update qemu-kvm to >2.4
+    - name: Add repo for rhel-7-server-rhv-4-mgmt-agent-rpms (RHEL7)
+      when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
+      #become: true
+      shell: |
+        subscription-manager repos --enable="rhel-7-server-rhv-4-mgmt-agent-rpms"
+
+    - name: Upgrade all packages, include update qemu-kvm to >2.4 (Centos7 And RHEL7)
       when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or
             (ansible_distribution == "RedHat" and ansible_distribution_major_version == "7")
     # because we added repo centos-qemu-ev from openstack
       yum:
         name: '*'
         state: latest
-
 
 
     - name: Enable and Start network
@@ -190,6 +210,9 @@
   when: kvm_configure  == "true"
   become: true
   tags: install
+  module_defaults:
+    shell:
+      chdir: "{{ kvm_workdir }}"
   block:
     - name: Enable IP Forwarding
       shell: "sysctl net.ipv4.ip_forward=1"
@@ -236,7 +259,6 @@
         name: libvirtd
         state: restarted
 
-
     - name: Configure Iptables
       become: true
       ignore_errors: yes
@@ -276,8 +298,6 @@
         state: directory
         mode: '0755'
 
-
-
     - name: Finish Host network configuration
       copy:
         dest:  /etc/NetworkManager/conf.d/openshift.conf
@@ -285,13 +305,11 @@
           [main]
           dns=dnsmasq
 
-
     - name: Create a directory /etc/NetworkManager/dnsmasq.d if it does not exist
       file:
         path: /etc/NetworkManager/dnsmasq.d
         state: directory
         mode: '0755'
-
 
     - name: DNS config without lb
       when: lb  != "true"
