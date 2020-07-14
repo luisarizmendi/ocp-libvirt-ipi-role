@@ -284,9 +284,9 @@
       ignore_errors: yes
       shell: |
         set -x
-        iptables -D INPUT -p tcp -s 192.168.126.0/24 -d {{ kvm_libvirt_network_gw }} -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
+        iptables -D INPUT -p tcp -s {{ ocp_machine_network }} -d {{ kvm_libvirt_network_gw }} -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
         #iptables -D INPUT -p tcp  --dport 16509 -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
-        iptables -I INPUT 1 -p tcp -s 192.168.126.0/24 -d {{ kvm_libvirt_network_gw }} -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
+        iptables -I INPUT 1 -p tcp -s {{ ocp_machine_network }} -d {{ kvm_libvirt_network_gw }} -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
         #iptables -I INPUT 1 -p tcp --dport 16509 -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
         iptables-save > /etc/iptables.conf
       when: kvm_firewall == "iptables"

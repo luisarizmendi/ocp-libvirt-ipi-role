@@ -272,7 +272,15 @@
         src: "post-install-scripts/"
         dest: "{{ ocp_install_path }}/post-install/"
 
+    - name: Write out nfs-registry env file
+      template:
+        src: nfs-registry/env.j2
+        dest: "{{ ocp_install_path }}/post-install/nfs-registry/env"
 
+    - name: Write out nfs-autoprovisioner env file
+      template:
+        src: nfs-autoprovisioner/env.j2
+        dest: "{{ ocp_install_path }}/post-install/nfs-autoprovisioner/env"
 
     - name: Configure Registry Storage (NFS)
       shell: "cd {{ ocp_install_path }}/post-install/nfs-registry/  ; chmod +x run.sh ; ./run.sh "

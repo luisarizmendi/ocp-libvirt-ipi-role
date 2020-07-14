@@ -77,7 +77,7 @@ backend openshift-api-server
     balance source
     mode tcp
 {% for m in range(0, controlPlane.replicas) %}
-    server master-{{ loop.index0 }} 192.168.126.1{{ loop.index0 + 1 }}:6443 check
+    server master-{{ loop.index0 }} {{ ocp_api_vip |ipmath( loop.index0 ) }}:6443 check
 {% endfor %}
 
 
@@ -101,7 +101,7 @@ backend ingress-http
     balance source
     mode tcp
 {% for w in range(0, nodes) %}
-    server worker-http-router-{{ loop.index0 }} 192.168.126.{{ net }}{{ loop.index0 + 1 }}:80 check
+    server worker-http-router-{{ loop.index0 }} {{ ocp_apps_vip | ipmath( loop.index0 ) }}:80 check
 {% endfor %}
 
 frontend ingress-https
@@ -114,7 +114,7 @@ backend ingress-https
     balance source
     mode tcp
 {% for w in range(0, nodes) %}
-    server worker-https-router-{{ loop.index0 }} 192.168.126.{{ net }}{{ loop.index0 + 1 }}:443 check
+    server worker-https-router-{{ loop.index0 }} {{ ocp_apps_vip | ipmath( loop.index0 ) }}:443 check
 {% endfor %}
 
 #---------------------------------------------------------------------
