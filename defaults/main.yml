@@ -14,6 +14,7 @@ kvm_interface: "eth0"
 kvm_ext_dns: "8.8.8.8"
 kvm_nestedvirtualization: "true"
 kvm_workdir: "{{ ansible_env.HOME }}"
+kvm_pool_location: "/var/lib/libvirt/openshift-images"
 
 nfs_storage: "true"
 lb: "true"
