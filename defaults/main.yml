@@ -48,6 +48,7 @@ ocp_worker_cpu: 2
 ocp_worker_disk: 120
 
 ## This is fixed right not, do not change
+ocp_machine_network: "192.168.126.0/24"
 ocp_api_vip: "192.168.126.11"
 ocp_apps_vip: "192.168.126.51"
 ocp_cluster_net_gw: "192.168.126.1"
