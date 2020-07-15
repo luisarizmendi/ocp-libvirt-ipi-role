@@ -41,22 +41,22 @@
 
     - name: Change timeouts to 180m
       shell: |
-        sed -i 's/apiTimeout := 20/apiTimeout := 180/g' {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
-        sed -i 's/timeout := 40/timeout := 180/g' {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
-        sed -i 's/timeout := 30/timeout := 180/g' {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
-        sed -i 's/consoleRouteTimeout := 10/consoleRouteTimeout := 60/g' {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
+        sed -i 's/apiTimeout := 20/apiTimeout := 180/g' {{ kvm_workdir }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
+        sed -i 's/timeout := 40/timeout := 180/g' {{ kvm_workdir }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
+        sed -i 's/timeout := 30/timeout := 180/g' {{ kvm_workdir }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
+        sed -i 's/consoleRouteTimeout := 10/consoleRouteTimeout := 60/g' {{ kvm_workdir }}/go/src/github.com/openshift/installer/cmd/openshift-install/create.go
 
 ## NOT NEEDED ANYMORE, libvirt_master_size variable was added
 ##
 #    - name: FIX master disk in code (Right now there is no other way)
 #      shell: |
 #        SIZE=$(({{ ocp_master_disk }}*1073741824))
-#        sed -i "s/resource \"libvirt_volume\" \"master\" {/resource \"libvirt_volume\" \"master\" {\n  size           = ${SIZE}/g" {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/data/data/libvirt/main.tf
+#        sed -i "s/resource \"libvirt_volume\" \"master\" {/resource \"libvirt_volume\" \"master\" {\n  size           = ${SIZE}/g" {{ kvm_workdir }}/go/src/github.com/openshift/installer/data/data/libvirt/main.tf
 
 
     - name: Build the Openshift installer with libvirt support
       shell: |
-        cd {{ ansible_env.HOME }}/go/src/github.com/openshift/installer/
+        cd {{ kvm_workdir }}/go/src/github.com/openshift/installer/
         TAGS=libvirt hack/build.sh
 
 ################
@@ -272,7 +272,15 @@
         src: "post-install-scripts/"
         dest: "{{ ocp_install_path }}/post-install/"
 
+    - name: Write out nfs-registry env file
+      template:
+        src: nfs-registry/env.j2
+        dest: "{{ ocp_install_path }}/post-install/nfs-registry/env"
 
+    - name: Write out nfs-autoprovisioner env file
+      template:
+        src: nfs-autoprovisioner/env.j2
+        dest: "{{ ocp_install_path }}/post-install/nfs-autoprovisioner/env"
 
     - name: Configure Registry Storage (NFS)
       shell: "cd {{ ocp_install_path }}/post-install/nfs-registry/  ; chmod +x run.sh ; ./run.sh "

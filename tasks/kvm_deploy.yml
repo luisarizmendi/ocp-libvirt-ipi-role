@@ -1,18 +1,38 @@
 ---
-- name: Create needed directories under {{ kvm_workdir }}
+- name: Prepare/Create directories
   become: true
   tags: install
-  file:
-    path: "{{ item }}"
-    owner: root
-    group: root
-    mode: 0755
-    state: directory
-  with_items:
-    - "{{ kvm_workdir }}"
-    - "{{ kvm_workdir }}/go"
-    - "{{ kvm_workdir }}/go-build"
-    - "{{ kvm_workdir }}/ocp"
+  module_defaults:
+    shell:
+      chdir: "{{ kvm_workdir }}"
+  block:
+    - name: Create required directories under {{ kvm_workdir }}
+      become: true
+      tags: install
+      file:
+        path: "{{ item }}"
+        owner: root
+        group: root
+        mode: 0755
+        state: directory
+      with_items:
+        - "{{ kvm_workdir }}"
+        - "{{ kvm_workdir }}/go"
+        - "{{ kvm_workdir }}/go-build"
+        - "{{ kvm_workdir }}/ocp"
+        - "{{ kvm_pool_location }}"
+
+    - name: Create /var/lib/libvirt/openshift-images symlink to {{ kvm_pool_location }}
+      file:
+        src: "{{ kvm_pool_location }}"
+        dest: /var/lib/libvirt/openshift-images
+        state: link
+
+    - name: Repair SELinux contexts ( {{ kvm_pool_location }} )
+      changed_when: false
+      shell: |
+        /sbin/semanage fcontext -a -t virt_var_lib_t "{{ kvm_pool_location }}(/.*)?"
+        /sbin/restorecon -rv {{ kvm_pool_location }}
 
 - name: Install KVM
   when: kvm_install  == "true"
@@ -264,9 +284,9 @@
       ignore_errors: yes
       shell: |
         set -x
-        iptables -D INPUT -p tcp -s 192.168.126.0/24 -d {{ kvm_libvirt_network_gw }} -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
+        iptables -D INPUT -p tcp -s {{ ocp_machine_network }} -d {{ kvm_libvirt_network_gw }} -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
         #iptables -D INPUT -p tcp  --dport 16509 -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
-        iptables -I INPUT 1 -p tcp -s 192.168.126.0/24 -d {{ kvm_libvirt_network_gw }} -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
+        iptables -I INPUT 1 -p tcp -s {{ ocp_machine_network }} -d {{ kvm_libvirt_network_gw }} -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
         #iptables -I INPUT 1 -p tcp --dport 16509 -j ACCEPT -m comment --comment 'Allow insecure libvirt clients'
         iptables-save > /etc/iptables.conf
       when: kvm_firewall == "iptables"
