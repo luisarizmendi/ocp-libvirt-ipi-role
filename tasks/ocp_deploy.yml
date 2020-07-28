@@ -130,9 +130,11 @@
         dest: "{{ ocp_install_path }}/install-config.yaml"
         owner: "{{ ansible_user}}"
 
-    - name: Copy install-config.yaml in install dir
-      shell: |
-        cp {{ ocp_install_path }}/install-config.yaml {{ ocp_install_path }}/install/install-config.yaml
+    - name: Copy install-config.yaml to install dir
+      copy:
+        src: "{{ ocp_install_path }}/install-config.yaml"
+        dest: "{{ ocp_install_path }}/install/install-config.yaml"
+        owner: "{{ ansible_user}}"
 
 ############ Run installation
 
@@ -153,22 +155,26 @@
     HOME: "{{ kvm_workdir }}"
   module_defaults:
     shell:
-      chdir: "{{ kvm_workdir }}"
+      chdir: "{{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}"
   block:
+#    {{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/openshift-install create manifests --log-level debug --dir {{ ocp_install_path }}/install/
     - name:  Create manifests
       shell: |
-        {{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/openshift-install create manifests --dir {{ ocp_install_path }}/install/
+        ./openshift-install create manifests --dir {{ ocp_install_path }}/install/
+
 
     - name: Configure Custom resources for Masters and Workers
       shell: |
-        MASTER_DISK_SIZE=$(({{ ocp_master_disk }}*1073741824)) # This is fixed in code but someday it will be possible to do it here
+        MASTER_DISK_SIZE=$(({{ ocp_master_disk }}*1073741824))
         WORKER_DISK_SIZE=$(({{ ocp_worker_disk }}*1073741824))
-        sed -i "s/volume:/volume:\n        volumeSize: ${MASTER_DISK_SIZE}/g" {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_master-machines-0.yaml
-        sed -i 's/.*domainMemory.*/      domainMemory: {{ ocp_master_memory }}/g' {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_master-machines-0.yaml
-        sed -i 's/.*domainVcpu.*/      domainVcpu: {{ ocp_master_cpu }}/g' {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_master-machines-0.yaml
-        sed -i "s/volume:/volume:\n            volumeSize: ${WORKER_DISK_SIZE}/g" {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_worker-machineset-0.yaml
-        sed -i 's/.*domainMemory.*/          domainMemory: {{ ocp_worker_memory }}/g' {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_worker-machineset-0.yaml
-        sed -i 's/.*domainVcpu.*/          domainVcpu: {{ ocp_worker_cpu }}/g' {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_worker-machineset-0.yaml
+        sed -i -e "s/volume:/volume:\n        volumeSize: ${MASTER_DISK_SIZE}/g" \
+           -e 's/.*domainMemory.*/      domainMemory: {{ ocp_master_memory }}/g' \
+           -e 's/.*domainVcpu.*/      domainVcpu: {{ ocp_master_cpu }}/g' \
+        {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_master-machines-0.yaml
+        sed -i -e "s/volume:/volume:\n            volumeSize: ${WORKER_DISK_SIZE}/g" \
+           -e 's/.*domainMemory.*/          domainMemory: {{ ocp_worker_memory }}/g' \
+           -e 's/.*domainVcpu.*/          domainVcpu: {{ ocp_worker_cpu }}/g' \
+        {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_worker-machineset-0.yaml
 
 
 

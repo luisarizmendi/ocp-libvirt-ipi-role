@@ -7,7 +7,6 @@
       chdir: "{{ kvm_workdir }}"
   block:
     - name: Create required directories under {{ kvm_workdir }}
-      become: true
       tags: install
       file:
         path: "{{ item }}"
@@ -20,6 +19,17 @@
         - "{{ kvm_workdir }}/go"
         - "{{ kvm_workdir }}/go-build"
         - "{{ kvm_workdir }}/ocp"
+
+    - name: Create pool directory for images under {{ kvm_pool_location }}
+      tags: install
+      file:
+        path: "{{ item }}"
+        owner: root
+        group: root
+        mode: 0755
+        state: directory
+        setype: virt_var_lib_t
+      with_items:
         - "{{ kvm_pool_location }}"
 
     - name: Create /var/lib/libvirt/openshift-images symlink to {{ kvm_pool_location }}
@@ -27,6 +37,7 @@
         src: "{{ kvm_pool_location }}"
         dest: /var/lib/libvirt/openshift-images
         state: link
+        setype: virt_var_lib_t
 
     - name: Repair SELinux contexts ( {{ kvm_pool_location }} )
       changed_when: false
@@ -184,11 +195,10 @@
             owner: nobody
             group: nobody
           with_items:
-            - /export
-            - /export/ocp/
-            - /export/ocp/static
-            - /export/ocp/static/registry
-            - /export/ocp/dynamic
+            - "{{ nfs_export_path }}/"
+            - "{{ nfs_export_path }}/static"
+            - "{{ nfs_export_path }}/static/registry"
+            - "{{ nfs_export_path }}/dynamic"
 
 
         - name: Create mountable dirs (CentOS/RHEL)
@@ -202,23 +212,24 @@
             owner: nfsnobody
             group: nfsnobody
           with_items:
-            - /export
-            - /export/ocp/
-            - /export/ocp/static
-            - /export/ocp/static/registry
-            - /export/ocp/dynamic
+            - "{{ nfs_export_path }}/"
+            - "{{ nfs_export_path }}/static"
+            - "{{ nfs_export_path }}/static/registry"
+            - "{{ nfs_export_path }}/dynamic"
 
         - name: FIX permissions
           shell: |
-            chmod  777 /export/*
+            chmod -R a+Xwr {{ nfs_export_path }}/
 
         - name: Configure /etc/exports
+          when: nfs_etc_exports_overwrite  == "true"
           copy:
             dest: "/etc/exports"
             content: |
-              /export/ocp	*(rw,sync,no_root_squash)
+              {{ nfs_export_path }}	*(rw,sync,no_root_squash)
 
         - name: Enable nfs-server
+          when: nfs_etc_exports_overwrite  == "true"
           systemd:
             name: nfs-server
             state: restarted
