@@ -112,7 +112,7 @@
         curl --compressed -J -L -o {{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz  {{ ocp_mirror }}/{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz
         tar -C {{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/  -xvf  {{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz
 
-    - name: Create a symbolic link
+    - name: Create /usr/local/bin/oc and /usr/local/bin/openshift-install symbolic links
       ignore_errors: yes
       become: yes
       file:
@@ -162,7 +162,6 @@
       shell: |
         ./openshift-install create manifests --dir {{ ocp_install_path }}/install/
 
-
     - name: Configure Custom resources for Masters and Workers
       shell: |
         MASTER_DISK_SIZE=$(({{ ocp_master_disk }}*1073741824))
@@ -175,9 +174,6 @@
            -e 's/.*domainMemory.*/          domainMemory: {{ ocp_worker_memory }}/g' \
            -e 's/.*domainVcpu.*/          domainVcpu: {{ ocp_worker_cpu }}/g' \
         {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_worker-machineset-0.yaml
-
-
-
 
 
 #    ## NOTE: We need to modify manifests because of https://github.com/openshift/installer/issues/1007 otherwise the console won't come up
@@ -218,8 +214,11 @@
         dest: "{{ ocp_install_path }}/single-master-patch.sh"
         mode: '0775'
 #############
+    - name: Display message about impending OpenShift install
+      debug:
+        msg: "The next task - OpenShift Install - might take up to 3 hours to produce any output, please be patient. Thank you."
 
-    - name:  OpenShift install
+    - name: OpenShift install
     #  shell: "{{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/openshift-install create cluster --dir {{ ocp_install_path }}/install/"
     # With overrides
       shell: |
