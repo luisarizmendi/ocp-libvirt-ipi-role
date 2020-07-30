@@ -17,6 +17,8 @@ kvm_workdir: "{{ ansible_env.HOME }}"
 kvm_pool_location: "/var/lib/libvirt/openshift-images"
 
 nfs_storage: "true"
+nfs_etc_exports_overwrite: "true"
+nfs_export_path: "/export/ocp"
 lb: "true"
 
 kvm_publish: "true"
@@ -32,8 +34,6 @@ ocp_install_path: "{{ kvm_workdir }}/ocp"
 
 ocp_mirror: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp"
 ocp_release: "4.4.0"
-
-
 
 ocp_master_memory: 16384
 ocp_master_cpu: 4
@@ -52,7 +52,6 @@ ocp_machine_network: "192.168.126.0/24"
 ocp_api_vip: "192.168.126.11"
 ocp_apps_vip: "192.168.126.51"
 ocp_cluster_net_gw: "192.168.126.1"
-
 
 ## VARS because we have to build the installer (no default libvirt support)
 ocp_openshift_installer_repo: "https://github.com/openshift/installer"
