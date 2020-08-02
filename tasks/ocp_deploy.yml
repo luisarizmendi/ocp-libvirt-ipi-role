@@ -157,10 +157,9 @@
     shell:
       chdir: "{{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}"
   block:
-#    {{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/openshift-install create manifests --log-level debug --dir {{ ocp_install_path }}/install/
     - name:  Create manifests
       shell: |
-        ./openshift-install create manifests --dir {{ ocp_install_path }}/install/
+        {{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/openshift-install create manifests --log-level debug --dir {{ ocp_install_path }}/install/
 
     - name: Configure Custom resources for Masters and Workers
       shell: |
