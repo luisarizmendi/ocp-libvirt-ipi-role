@@ -85,7 +85,7 @@
       file:
         path: "{{ ocp_install_path }}/artifacts/openshift-{{ item }}-{{ ocp_release }}"
         state: directory
-        mode: u+rwx,g-rx,o-rx
+        mode: u+rwX,g-w,o-w
       with_items:
         - installer
         - client
