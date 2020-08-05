@@ -150,6 +150,7 @@
           yum:
             name:
               - haproxy
+              - python3-netaddr
             state: present
 
         - name: Write out haproxy config file
@@ -177,7 +178,8 @@
       become: true
       block:
         - name: Install needed packages
-          yum:
+          
+          :
             state: latest
             name: "{{ item }}"
           with_items:
