@@ -83,10 +83,9 @@ backend openshift-api-server
 
 
 {% if compute.0.replicas == 0 %}
-{% set net = 1 %}
 {% set nodes = controlPlane.replicas %}
+{% set ocp_apps_vip = ocp_api_vip %}
 {% else %}
-{% set net = 5 %}
 {% set nodes = compute.0.replicas %}
 {% endif %}
 
