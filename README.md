@@ -95,7 +95,7 @@ There are some variables that you will need to modify to configure the environme
 
 * ocp_master_disk
 
-      description: Disk size (in GB) for Master nodes
+      description: Disk size (in GB) for Master nodes. NOTE: There is a bug in the provider that includes a k when size is big (ie. 500GB), it's better to stick to the default
 
       default: 120
 
