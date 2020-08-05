@@ -38,6 +38,7 @@
         dest: /var/lib/libvirt/openshift-images
         state: link
         setype: virt_var_lib_t
+      when: kvm_pool_location  != "/var/lib/libvirt/openshift-images"
 
     - name: Repair SELinux contexts ( {{ kvm_pool_location }} )
       changed_when: false
