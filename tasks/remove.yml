@@ -117,7 +117,7 @@
             path: "{{ item }}"
             state: absent
           with_items:
-            - {{ nfs_export_path }}
+            - "{{ nfs_export_path }}"
 
 
 
