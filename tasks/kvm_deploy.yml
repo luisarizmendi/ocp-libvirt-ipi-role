@@ -178,8 +178,7 @@
       become: true
       block:
         - name: Install needed packages
-          
-          :
+          yum:
             state: latest
             name: "{{ item }}"
           with_items:
