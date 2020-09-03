@@ -215,7 +215,7 @@
 #############
     - name: Display message about pending OpenShift install
       debug:
-        msg: "The next task - OpenShift Install - might take up to 3 hours to produce any output, please be patient. Thank you."
+        msg: "The next task - OpenShift Install - might take some time to produce any output, please be patient. Thank you."
 
     - name: OpenShift install
     #  shell: "{{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/openshift-install create cluster --dir {{ ocp_install_path }}/install/"
