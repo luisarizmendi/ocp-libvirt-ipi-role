@@ -213,7 +213,7 @@
         dest: "{{ ocp_install_path }}/single-master-patch.sh"
         mode: '0775'
 #############
-    - name: Display message about impending OpenShift install
+    - name: Display message about pending OpenShift install
       debug:
         msg: "The next task - OpenShift Install - might take up to 3 hours to produce any output, please be patient. Thank you."
 
