@@ -5,7 +5,7 @@
   tags: [ install, remove ]
 
 - include_tasks: "kvm_deploy.yml"
-  when: kvm_install == "true" or kvm_configure == "true"
+  when: kvm_install == "true" or kvm_install == "minimal" or kvm_configure == "true"
   tags: install
 
 - include_tasks: "ocp_deploy.yml"

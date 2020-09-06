@@ -1,5 +1,18 @@
 ---
+- name: Create Initial required directory as {{ kvm_workdir }}
+  when: kvm_install  == "true" or kvm_install == "minimal"
+  tags: install
+  file:
+    path: "{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+  with_items:
+    - "{{ kvm_workdir }}"
+
 - name: Prepare/Create directories
+  when: kvm_install  == "true" or kvm_install == "minimal"
   become: true
   tags: install
   module_defaults:
@@ -33,6 +46,7 @@
         - "{{ kvm_pool_location }}"
 
     - name: Create /var/lib/libvirt/openshift-images symlink to {{ kvm_pool_location }}
+      tags: install
       file:
         src: "{{ kvm_pool_location }}"
         dest: /var/lib/libvirt/openshift-images
@@ -41,6 +55,7 @@
       when: kvm_pool_location  != "/var/lib/libvirt/openshift-images"
 
     - name: Repair SELinux contexts ( {{ kvm_pool_location }} )
+      tags: install
       changed_when: false
       shell: |
         /sbin/semanage fcontext -a -t virt_var_lib_t "{{ kvm_pool_location }}(/.*)?"
