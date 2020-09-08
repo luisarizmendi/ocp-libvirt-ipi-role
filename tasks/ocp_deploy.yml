@@ -132,7 +132,7 @@
 
     - name: Copy install-config.yaml to install dir
       copy:
-        src: "{{ ocp_install_path }}/install-config.yaml"
+        src: "{{ ocp_install_file_path }}"
         dest: "{{ ocp_install_path }}/install/install-config.yaml"
         owner: "{{ ansible_user}}"
 
@@ -269,7 +269,6 @@
       file:
         path: "{{ ocp_install_path }}/post-install"
         state: directory
-
 
     - name: Copy post-install scripts
       copy:
