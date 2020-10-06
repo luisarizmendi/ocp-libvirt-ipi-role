@@ -243,7 +243,7 @@
           copy:
             dest: "/etc/exports"
             content: |
-              {{ nfs_export_path }}	*(rw,sync,no_root_squash)
+              {{ nfs_export_path }}	*(rw,sync,root_squash)
 
         - name: Enable nfs-server
           when: nfs_etc_exports_overwrite  == "true"
