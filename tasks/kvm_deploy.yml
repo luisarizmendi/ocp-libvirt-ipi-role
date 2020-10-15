@@ -263,6 +263,7 @@
         line: listen_tls = 0
 
     - name: Configure libvirt listen_tcp
+      when: ansible_distribution != "Fedora"    
       lineinfile:
         path: /etc/libvirt/libvirtd.conf
         regexp: 'listen_tcp'
@@ -281,6 +282,7 @@
         line: tcp_port = "16509"
 
     - name: Configure libvirt LIBVIRTD_ARGS
+      when: ansible_distribution != "Fedora"        
       lineinfile:
         path: /etc/sysconfig/libvirtd
         regexp: 'LIBVIRTD_ARGS'
