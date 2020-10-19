@@ -132,7 +132,7 @@
 
     - name: Copy install-config.yaml to install dir
       copy:
-        src: "{{ ocp_install_path }}/install-config.yaml"
+        src: "{{ ocp_install_file_path }}"
         dest: "{{ ocp_install_path }}/install/install-config.yaml"
         owner: "{{ ansible_user}}"
 
@@ -213,7 +213,7 @@
         dest: "{{ ocp_install_path }}/single-master-patch.sh"
         mode: '0775'
 #############
-    - name: Display message about pending OpenShift install
+    - name: Display message about impending OpenShift install
       debug:
         msg: "The next task - OpenShift Install - might take some time to produce any output, please be patient. Thank you."
 
@@ -269,7 +269,6 @@
       file:
         path: "{{ ocp_install_path }}/post-install"
         state: directory
-
 
     - name: Copy post-install scripts
       copy:

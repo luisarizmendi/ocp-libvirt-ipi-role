@@ -1,5 +1,18 @@
 ---
+- name: Create Initial required directory as {{ kvm_workdir }}
+  when: kvm_install == "true" or kvm_install == "minimal"
+  tags: install
+  file:
+    path: "{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+  with_items:
+    - "{{ kvm_workdir }}"
+
 - name: Prepare/Create directories
+  when: kvm_install == "true" or kvm_install == "minimal"
   become: true
   tags: install
   module_defaults:
@@ -33,6 +46,7 @@
         - "{{ kvm_pool_location }}"
 
     - name: Create /var/lib/libvirt/openshift-images symlink to {{ kvm_pool_location }}
+      tags: install
       file:
         src: "{{ kvm_pool_location }}"
         dest: /var/lib/libvirt/openshift-images
@@ -41,13 +55,14 @@
       when: kvm_pool_location  != "/var/lib/libvirt/openshift-images"
 
     - name: Repair SELinux contexts ( {{ kvm_pool_location }} )
+      tags: install
       changed_when: false
       shell: |
         /sbin/semanage fcontext -a -t virt_var_lib_t "{{ kvm_pool_location }}(/.*)?"
         /sbin/restorecon -rv {{ kvm_pool_location }}
 
 - name: Install KVM
-  when: kvm_install  == "true"
+  when: kvm_install == "true"
   become: true
   tags: install
   module_defaults:
@@ -124,7 +139,7 @@
         enabled: yes
 
     - name: Enable and Start libvirtd-tcp.socket
-      when: ansible_distribution  == "Fedora"
+      when: ansible_distribution == "Fedora"
       systemd:
         name: libvirtd-tcp.socket
         state: restarted
@@ -143,7 +158,7 @@
 
 
     - name: Install Load Balancer
-      when: lb  == "true"
+      when: lb == "true"
       become: true
       block:
         - name: Install needed packages
@@ -171,76 +186,67 @@
           with_items:
             - haproxy
 
+- name: Install NFS requirements
+  when: nfs_storage == "true"
+  become: true
+  tags: install
+  block:
+    - name: Install needed packages for NFS
+      yum:
+        state: latest
+        name: "{{ item }}"
+      with_items:
+        - nfs-utils
+        - rpcbind
 
+    - name: Set user and group for NFS nobody ( Fedora/Centos/RHEL 8 )
+      set_fact:
+        nfs_user: "nobody"
+        nfs_group: "nobody"
 
-    - name: Install NFS
-      when: nfs_storage  == "true"
-      become: true
-      block:
-        - name: Install needed packages
-          yum:
-            state: latest
-            name: "{{ item }}"
-          with_items:
-            - nfs-utils
-            - rpcbind
+    - name: Set user and group for NFS nobody ( Fedora/Centos/RHEL 7 )
+      set_fact:
+        nfs_user: "nfsnobody"
+        nfs_group: "nfsnobody"
 
-        - name: Create mountable dirs (Fedora / CentOS/RHEL 8)
-          when: ansible_distribution  == "Fedora" or
-                (ansible_distribution == "CentOS" and ansible_distribution_major_version == "8") or
-                (ansible_distribution == "RedHat" and ansible_distribution_major_version == "8")
-          ignore_errors: yes
-          file:
-            path: "{{ item }}"
-            state: directory
-            mode: 0777
-            owner: nobody
-            group: nobody
-          with_items:
-            - "{{ nfs_export_path }}/"
-            - "{{ nfs_export_path }}/static"
-            - "{{ nfs_export_path }}/static/registry"
-            - "{{ nfs_export_path }}/dynamic"
+    - name: Create mountable dirs ( Fedora / CentOS / RHEL )
+      when: ansible_distribution == "Fedora" or
+            ansible_distribution == "CentOS" or
+            ansible_distribution == "RedHat"
+      ignore_errors: yes
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0777
+        owner: "{{ nfs_user }}"
+        group: "{{ nfs_group }}"
+      with_items:
+        - "{{ nfs_export_path }}/"
+        - "{{ nfs_export_path }}/static"
+        - "{{ nfs_export_path }}/static/registry"
+        - "{{ nfs_export_path }}/dynamic"
 
+    - name: FIX permissions
+      shell: |
+        chmod -R a+Xwr {{ nfs_export_path }}/
 
-        - name: Create mountable dirs (CentOS/RHEL)
-          when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or
-                (ansible_distribution == "RedHat" and ansible_distribution_major_version == "7")
-          ignore_errors: yes
-          file:
-            path: "{{ item }}"
-            state: directory
-            mode: 0777
-            owner: nfsnobody
-            group: nfsnobody
-          with_items:
-            - "{{ nfs_export_path }}/"
-            - "{{ nfs_export_path }}/static"
-            - "{{ nfs_export_path }}/static/registry"
-            - "{{ nfs_export_path }}/dynamic"
+    - name: Configure /etc/exports
+      when: nfs_etc_exports_overwrite == "true"
+      copy:
+        dest: "/etc/exports"
+        content: |
+          {{ nfs_export_path }}	*(rw,sync,root_squash)
 
-        - name: FIX permissions
-          shell: |
-            chmod -R a+Xwr {{ nfs_export_path }}/
-
-        - name: Configure /etc/exports
-          when: nfs_etc_exports_overwrite  == "true"
-          copy:
-            dest: "/etc/exports"
-            content: |
-              {{ nfs_export_path }}	*(rw,sync,no_root_squash)
-
-        - name: Enable nfs-server
-          when: nfs_etc_exports_overwrite  == "true"
-          systemd:
-            name: nfs-server
-            state: restarted
-            enabled: True
-
+    - name: Enable nfs-server
+      when: nfs_etc_exports_overwrite == "true"
+      systemd:
+        name: nfs-server
+        state: restarted
+        enabled: True
 
 
 - name: Prepare KVM
-  when: kvm_configure  == "true"
+  when: kvm_configure == "true"
   become: true
   tags: install
   module_defaults:
@@ -364,7 +370,7 @@
               address=/.apps.{{ metadata.name }}.{{ baseDomain }}/{{ ocp_api_vip  }}
 
     - name: DNS config with lb
-      when: lb  == "true"
+      when: lb == "true"
       copy:
         dest:  /etc/NetworkManager/dnsmasq.d/openshift.conf
         content: |
