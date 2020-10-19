@@ -419,6 +419,10 @@ Why not all variables are named as this one? We could just get rid of documentat
 
 Terraform libvirt plugin does not make dhcp host entries persistent, so if you reboot the KVM node the master nodes won't come up again since they will have the 'api' hostname instead of their proper name , thus the node won't be recognized by ETCD. There are multiple ways to fix this, I decided to do the quick-and-dirty way, just reconfiguring those entries in the libvirt network as persistent.
 
+### Extra manifests
+
+If you need to add extra manifests to the installation, put them on a folder called `extra_manifests` and they will be copied over to the manifests folder before the installation begins. 
+
 Enjoy
 -----------------
 

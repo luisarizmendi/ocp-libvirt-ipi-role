@@ -161,6 +161,18 @@
       shell: |
         {{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/openshift-install create manifests --log-level debug --dir {{ ocp_install_path }}/install/
 
+    - name: Check if extra_manifests folder exists
+      stat: 
+        path: "{{ playbook_dir }}/extra_manifests/"
+      register: extra_manifests
+
+    - name: Copy extra manifests to installation folder
+      copy:
+        src: "extra_manifests/"
+        dest: "{{ ocp_install_path }}/install/manifests/"
+        owner: "{{ ansible_user}}"
+      when: extra_manifests.stat.isdir is defined and extra_manifests.stat.isdir
+
     - name: Configure Custom resources for Masters and Workers
       shell: |
         MASTER_DISK_SIZE=$(({{ ocp_master_disk }}*1073741824))
