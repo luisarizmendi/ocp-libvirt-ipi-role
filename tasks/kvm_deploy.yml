@@ -70,6 +70,7 @@
       chdir: "{{ kvm_workdir }}"
   block:
     - name: Installing KVM Packages
+      ignore_errors: yes
       yum:
         name:
           - libvirt
@@ -77,6 +78,7 @@
           - libvirt-daemon-kvm
           - qemu-kvm
           - NetworkManager
+          - python3-netaddr
           - unzip
           - tar
         state: present
