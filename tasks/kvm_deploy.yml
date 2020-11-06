@@ -193,11 +193,10 @@
   block:
     - name: Install needed packages for NFS
       yum:
+        name: 
+          - nfs-utils
+          - rpcbind
         state: latest
-        name: "{{ item }}"
-      with_items:
-        - nfs-utils
-        - rpcbind
 
     - name: Set user and group for NFS nobody ( Fedora/Centos/RHEL 8 )
       set_fact:
