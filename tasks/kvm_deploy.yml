@@ -1,4 +1,6 @@
 ---
+################
+#
 - name: Create Initial required directory as {{ kvm_workdir }}
   when: kvm_install == "true" or kvm_install == "minimal"
   tags: install
@@ -61,6 +63,8 @@
         /sbin/semanage fcontext -a -t virt_var_lib_t "{{ kvm_pool_location }}(/.*)?"
         /sbin/restorecon -rv {{ kvm_pool_location }}
 
+################
+#
 - name: Install KVM
   when: kvm_install == "true"
   become: true
@@ -96,7 +100,6 @@
         enabled: yes
       when: kvm_firewall == "firewalld"
 
-
     # Update qemu to +2.4 because option fw_cfg added in 2.4
     #  "qemu-kvm: -fw_cfg: invalid option"
     #  https://github.com/qemu/qemu/commit/81b2b81062612e
@@ -123,7 +126,6 @@
       yum:
         name: '*'
         state: latest
-
 
     - name: Enable and Start network
       become: true
@@ -156,7 +158,6 @@
       register: result
       failed_when: "result.rc != 0"
 
-
     - name: Install Load Balancer
       when: lb == "true"
       become: true
@@ -173,7 +174,6 @@
             src: haproxy.cfg.j2
             dest: /etc/haproxy/haproxy.cfg
 
-
         - name: SEBool allow haproxy connect any port
           ignore_errors: yes
           shell: "setsebool -P haproxy_connect_any 1"
@@ -186,6 +186,8 @@
           with_items:
             - haproxy
 
+################
+#
 - name: Install NFS requirements
   when: nfs_storage == "true"
   become: true
@@ -244,6 +246,8 @@
         enabled: True
 
 
+################
+#
 - name: Prepare KVM
   when: kvm_configure == "true"
   become: true
@@ -309,7 +313,6 @@
         iptables-save > /etc/iptables.conf
       when: kvm_firewall == "iptables"
 
-
     - name: Configure Firewalld
       become: true
       ignore_errors: yes
@@ -328,7 +331,6 @@
         firewall-cmd --zone=libvirt --add-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
         firewall-cmd --reload
       when: kvm_firewall == "firewalld"
-
 
     - name: Create a directory /etc/NetworkManager/conf.d if it does not exist
       file:
