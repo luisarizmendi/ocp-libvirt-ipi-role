@@ -38,18 +38,6 @@
         curl --compressed -J -L -o {{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz  {{ ocp_mirror }}/{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz
         tar -C {{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/  -xvf  {{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/openshift-client-linux-{{ ocp_release }}.tar.gz
 
-    - name: Create /usr/local/bin/oc and /usr/local/bin/openshift-install symbolic links
-      ignore_errors: yes
-      become: yes
-      file:
-        src: "{{ item.value }}"
-        dest: "{{ item.key }}"
-        state: link
-        force: yes
-      with_dict:
-        "/usr/local/bin/oc": "{{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/oc"
-        "/usr/local/bin/openshift-install": "{{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/openshift-install"
-
     - name: Clone Openshift installer repo
       git:
         repo: "{{ ocp_openshift_installer_repo }}"
@@ -61,14 +49,14 @@
     ## NOTE : In order to reliably manage deployment we must use a matching repo for the release to be installed
     - name: Find git commit ID for OCP release
       shell: |
-        /usr/local/bin/oc adm release info {{ ocp_release }} --commit-urls \
+        {{ ocp_install_path }}/artifacts/openshift-client-{{ ocp_release }}/oc adm release info {{ ocp_release }} --commit-urls \
           |awk '{ if ( $1 == "installer" ) { n=split($2,a,"/"); print a[n]} }'
       register:
         installercommitid
 
     - name: Checkout specific GIT commit ID for release {{ installercommitid.stdout }}
-      shell: >
-        git checkout {{ installercommitid.stdout }}
+      shell: |
+        git checkout -b release-{{ ocp_release }} {{ installercommitid.stdout }}
       args:
         chdir:
           "{{ kvm_workdir }}/go/src/github.com/openshift/installer"
