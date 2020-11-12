@@ -56,7 +56,8 @@
 
     - name: Checkout specific GIT commit ID for release {{ installercommitid.stdout }}
       shell: |
-        git checkout -b release-{{ ocp_release }} {{ installercommitid.stdout }} || /bin/true
+        git branch -d release-{{ ocp_release }} || /bin/true
+        git checkout -b release-{{ ocp_release }} {{ installercommitid.stdout }}
       args:
         chdir:
           "{{ kvm_workdir }}/go/src/github.com/openshift/installer"
