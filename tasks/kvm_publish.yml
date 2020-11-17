@@ -1,118 +1,116 @@
 ---
+################
+#
+  - name: Configure Iptables
+    become: true
+    tags: install
+    ignore_errors: yes
+    shell: |
+      IFACE=$(nmcli con show "{{ kvm_interface }}" | grep connection.interface-name | awk '{print $2}')
+      # Publishing
+      if [ {{ compute.0.replicas }} -ne 0 ]
+      then
+        API_VIP={{ ocp_api_vip }}
+        APPS_VIP={{ ocp_apps_vip }}
+      else
+        API_VIP={{ ocp_api_vip }}
+        APPS_VIP={{ ocp_api_vip }}
+      fi
+      if [ {{ lb }} == "true" ]
+      then
+        API_VIP={{ ocp_cluster_net_gw }}
+        APPS_VIP={{ ocp_cluster_net_gw }}
+      fi
+      iptables -I FORWARD 1 -i any -o any -j ACCEPT
+      iptables -I PREROUTING 1 -t nat -i $IFACE -p tcp --dport 6443 -j DNAT --to $API_VIP:6443
+      iptables -I FORWARD 1 -p tcp -d $API_VIP --dport 6443 -j ACCEPT
+      iptables -I PREROUTING 1 -t nat -i $IFACE -p tcp --dport 443 -j DNAT --to $APPS_VIP:443
+      iptables -I FORWARD 1 -p tcp -d $APPS_VIP --dport 443 -j ACCEPT
+      iptables -I PREROUTING 1  -t nat -i $IFACE -p tcp --dport 80 -j DNAT --to $APPS_VIP:80
+      iptables -I FORWARD 1 -p tcp -d $APPS_VIP --dport 80 -j ACCEPT
+      iptables -I INPUT 1 -p tcp  --dport 6443 -j ACCEPT
+      iptables -I INPUT 1 -p tcp  --dport 443 -j ACCEPT
+      iptables -I INPUT 1 -p tcp  --dport 80 -j ACCEPT
+      iptables-save > /etc/iptables.conf
+    when: kvm_firewall == "iptables"
 
-    - name: Configure Iptables
-      become: true
-      tags: install
-      ignore_errors: yes
-      shell: |
-        IFACE=$(nmcli con show "{{ kvm_interface }}" | grep connection.interface-name | awk '{print $2}')
-        # Publishing
-        if [ {{ compute.0.replicas }} -ne 0 ]
-        then
-          API_VIP={{ ocp_api_vip }}
-          APPS_VIP={{ ocp_apps_vip }}
-        else
-          API_VIP={{ ocp_api_vip }}
-          APPS_VIP={{ ocp_api_vip }}
-        fi
-        if [ {{ lb }} == "true" ]
-        then
-          API_VIP={{ ocp_cluster_net_gw }}
-          APPS_VIP={{ ocp_cluster_net_gw }}
-        fi
-        iptables -I FORWARD 1 -i any -o any -j ACCEPT
-        iptables -I PREROUTING 1 -t nat -i $IFACE -p tcp --dport 6443 -j DNAT --to $API_VIP:6443
-        iptables -I FORWARD 1 -p tcp -d $API_VIP --dport 6443 -j ACCEPT
-        iptables -I PREROUTING 1 -t nat -i $IFACE -p tcp --dport 443 -j DNAT --to $APPS_VIP:443
-        iptables -I FORWARD 1 -p tcp -d $APPS_VIP --dport 443 -j ACCEPT
-        iptables -I PREROUTING 1  -t nat -i $IFACE -p tcp --dport 80 -j DNAT --to $APPS_VIP:80
-        iptables -I FORWARD 1 -p tcp -d $APPS_VIP --dport 80 -j ACCEPT
-        iptables -I INPUT 1 -p tcp  --dport 6443 -j ACCEPT
-        iptables -I INPUT 1 -p tcp  --dport 443 -j ACCEPT
-        iptables -I INPUT 1 -p tcp  --dport 80 -j ACCEPT
-        iptables-save > /etc/iptables.conf
-      when: kvm_firewall == "iptables"
+  - name: Configure Firewalld
+    become: true
+    tags: install
+    ignore_errors: yes
+    shell: |
+      IFACE=$(nmcli con show "{{ kvm_interface }}" | grep connection.interface-name | awk '{print $2}')
+      ZONE_EXT=$(firewall-cmd --list-all-zones | grep -B 3 $IFACE | head -n 1 | awk '{print $1}')
+      # Publishing
+      if [ {{ compute.0.replicas }} -ne 0 ]
+      then
+        API_VIP={{ ocp_api_vip }}
+        APPS_VIP={{ ocp_apps_vip }}
+      else
+        API_VIP={{ ocp_api_vip }}
+        APPS_VIP={{ ocp_api_vip }}
+      fi
+      if [ {{ lb }} == "true" ]
+      then
+        API_VIP={{ ocp_cluster_net_gw }}
+        APPS_VIP={{ ocp_cluster_net_gw }}
+      fi
+      firewall-cmd --zone=$ZONE_EXT --add-service=http --permanent
+      firewall-cmd --zone=$ZONE_EXT --add-service=https --permanent
+      firewall-cmd --zone=$ZONE_EXT --add-service=ocpapi --permanent
+      firewall-cmd --permanent --add-forward-port=port=6443:proto=tcp:toport=6443:toaddr=$API_VIP --zone=$ZONE_EXT
+      firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=443:toaddr=$APPS_VIP --zone=$ZONE_EXT
+      firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=80:toaddr=$APPS_VIP --zone=$ZONE_EXT
+      firewall-cmd --reload
+    when: kvm_firewall == "firewalld"
 
+  - name: Access information
+    become: true
+    tags: install
+    ignore_errors: yes
+    block:
+      - name: Get Web Console URL
+        shell: "oc get route -n openshift-console | grep https | awk '{print $2}' "
+        register: webconsoleurl
 
-    - name: Configure Firewalld
-      become: true
-      tags: install
-      ignore_errors: yes
-      shell: |
-        IFACE=$(nmcli con show "{{ kvm_interface }}" | grep connection.interface-name | awk '{print $2}')
-        ZONE_EXT=$(firewall-cmd --list-all-zones | grep -B 3 $IFACE | head -n 1 | awk '{print $1}')
-        # Publishing
-        if [ {{ compute.0.replicas }} -ne 0 ]
-        then
-          API_VIP={{ ocp_api_vip }}
-          APPS_VIP={{ ocp_apps_vip }}
-        else
-          API_VIP={{ ocp_api_vip }}
-          APPS_VIP={{ ocp_api_vip }}
-        fi
-        if [ {{ lb }} == "true" ]
-        then
-          API_VIP={{ ocp_cluster_net_gw }}
-          APPS_VIP={{ ocp_cluster_net_gw }}
-        fi
-        firewall-cmd --zone=$ZONE_EXT --add-service=http --permanent
-        firewall-cmd --zone=$ZONE_EXT --add-service=https --permanent
-        firewall-cmd --zone=$ZONE_EXT --add-service=ocpapi --permanent
-        firewall-cmd --permanent --add-forward-port=port=6443:proto=tcp:toport=6443:toaddr=$API_VIP --zone=$ZONE_EXT
-        firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=443:toaddr=$APPS_VIP --zone=$ZONE_EXT
-        firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=80:toaddr=$APPS_VIP --zone=$ZONE_EXT
-        firewall-cmd --reload
-      when: kvm_firewall == "firewalld"
+      - name: Get kubeadmin password
+        shell: "tail {{ ocp_install_path }}/install/.openshift_install.log | grep password: | awk -F 'password: ' '{print  substr($2, 1, length($2)-1)}'"
+        register: kubeadminpass
 
+      - name: OpenShift Web Console access
+        debug:
+          msg:
+            - "                                                                                                        "
+            - "                                                                                                        "
+            - "   ***********************************************************************************************      "
+            - "                                         WEB CONSOLE ACCESS                                             "
+            - "   ***********************************************************************************************      "
+            - "                                                                                                        "
+            - "   https://{{ webconsoleurl.stdout }}      "
+            - "                                                                                                        "
+            - "                                                                                                        "
+            - "   Username: kubeadmin     Password: {{ kubeadminpass.stdout  }}                                            "
+            - "                                                                                                        "
+            - "   ***********************************************************************************************      "
+        when: ocp_create_users  != "true"
 
-
-    - name: Access information
-      become: true
-      tags: install
-      ignore_errors: yes
-      block:
-        - name: Get Web Console URL
-          shell: "oc get route -n openshift-console | grep https | awk '{print $2}' "
-          register: webconsoleurl
-
-        - name: Get kubeadmin password
-          shell: "tail {{ ocp_install_path }}/install/.openshift_install.log | grep password: | awk -F 'password: ' '{print  substr($2, 1, length($2)-1)}'"
-          register: kubeadminpass
-
-        - name: OpenShift Web Console access
-          debug:
-            msg:
-              - "                                                                                                        "
-              - "                                                                                                        "
-              - "   ***********************************************************************************************      "
-              - "                                         WEB CONSOLE ACCESS                                             "
-              - "   ***********************************************************************************************      "
-              - "                                                                                                        "
-              - "   https://{{ webconsoleurl.stdout }}      "
-              - "                                                                                                        "
-              - "                                                                                                        "
-              - "   Username: kubeadmin     Password: {{ kubeadminpass.stdout  }}                                            "
-              - "                                                                                                        "
-              - "   ***********************************************************************************************      "
-          when: ocp_create_users  != "true"
-
-        - name: OpenShift Web Console access
-          debug:
-            msg:
-              - "                                                                                                        "
-              - "                                                                                                        "
-              - "   ***********************************************************************************************      "
-              - "                                         WEB CONSOLE ACCESS                                             "
-              - "   ***********************************************************************************************      "
-              - "                                                                                                        "
-              - "   https://{{ webconsoleurl.stdout }}     "
-              - "                                                                                                        "
-              - "                                                                                                        "
-              - "   htpasswd_provider - Cluster Admin         Username: clusteradmin  Password: {{ ocp_clusteradmin_password }} "
-              - "   htpasswd_provider - Cluster Readonly      Username: viewuser      Password: {{ ocp_users_password }} "
-              - "   htpasswd_provider - Regular User (1-25)   Username: userXX        Password: {{ ocp_users_password }} "
-              - "   kube:admin        - system:admin          Username: kubeadmin     Password: {{ kubeadminpass.stdout  }}  "
-              - "                                                                                                        "
-              - "   ***********************************************************************************************      "
-          when: ocp_create_users  == "true"
-      when: kvm_publish == "true"
+      - name: OpenShift Web Console access
+        debug:
+          msg:
+            - "                                                                                                        "
+            - "                                                                                                        "
+            - "   ***********************************************************************************************      "
+            - "                                         WEB CONSOLE ACCESS                                             "
+            - "   ***********************************************************************************************      "
+            - "                                                                                                        "
+            - "   https://{{ webconsoleurl.stdout }}     "
+            - "                                                                                                        "
+            - "                                                                                                        "
+            - "   htpasswd_provider - Cluster Admin         Username: clusteradmin  Password: {{ ocp_clusteradmin_password }} "
+            - "   htpasswd_provider - Cluster Readonly      Username: viewuser      Password: {{ ocp_users_password }} "
+            - "   htpasswd_provider - Regular User (1-25)   Username: userXX        Password: {{ ocp_users_password }} "
+            - "   kube:admin        - system:admin          Username: kubeadmin     Password: {{ kubeadminpass.stdout  }}  "
+            - "                                                                                                        "
+            - "   ***********************************************************************************************      "
+        when: ocp_create_users  == "true"
+    when: kvm_publish == "true"
