@@ -320,7 +320,7 @@
           register: webconsoleurl
 
         - name: Get kubeadmin password
-          shell: "tail {{ ocp_install_path }}/install/.openshift_install.log | grep password: | awk -F 'password: ' '{print  substr($2, 1, length($2)-1)}'"
+          shell: "tail {{ ocp_install_path }}/install/.openshift_install.log | grep password: | awk -F '\"' '{print  substr($7, 1, length($7)-1)}'"
           register: kubeadminpass
 
         - name: OpenShift Web Console access
