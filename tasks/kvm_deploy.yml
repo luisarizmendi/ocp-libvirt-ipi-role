@@ -232,7 +232,7 @@
     - name: FIX permissions
       shell: |
         chmod -R a+Xwr {{ nfs_export_path }}/
-        setfacl -d -m o::rwx {{ nfs_export_path }}/*
+        chmod -R g+s  {{ nfs_export_path }}/*
 
     - name: Configure /etc/exports
       when: nfs_etc_exports_overwrite == "true"
