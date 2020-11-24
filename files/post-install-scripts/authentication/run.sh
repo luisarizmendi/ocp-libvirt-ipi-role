@@ -50,8 +50,8 @@ oc adm groups new reviewers viewuser
 
 
 # Assign roles to groups
-oc adm policy add-cluster-role-to-group view reviewers
-oc adm policy add-role-to-group admin developers
+#oc adm policy add-cluster-role-to-group view reviewers
+#oc adm policy add-role-to-group admin developers
 
 
 # Remove kubeadmin
