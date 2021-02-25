@@ -182,11 +182,11 @@
         MASTER_MEMORY_SIZE=$(({{ ocp_master_memory }}*1024))
         WORKER_MEMORY_SIZE=$(({{ ocp_worker_memory }}*1024))
         sed -i -e "s/volume:/volume:\n        volumeSize: ${MASTER_DISK_SIZE}/g" \
-           -e 's/.*domainMemory.*/      domainMemory: ${MASTER_MEMORY_SIZE}/g' \
+           -e "s/.*domainMemory.*/      domainMemory: ${MASTER_MEMORY_SIZE}/g" \
            -e 's/.*domainVcpu.*/      domainVcpu: {{ ocp_master_cpu }}/g' \
         {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_master-machines-0.yaml
         sed -i -e "s/volume:/volume:\n            volumeSize: ${WORKER_DISK_SIZE}/g" \
-           -e 's/.*domainMemory.*/          domainMemory: ${WORKER_MEMORY_SIZE}/g' \
+           -e "s/.*domainMemory.*/          domainMemory: ${WORKER_MEMORY_SIZE}/g" \
            -e 's/.*domainVcpu.*/          domainVcpu: {{ ocp_worker_cpu }}/g' \
         {{ ocp_install_path }}/install/openshift/99_openshift-cluster-api_worker-machineset-0.yaml
 
