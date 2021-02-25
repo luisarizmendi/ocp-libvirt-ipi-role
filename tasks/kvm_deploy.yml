@@ -143,7 +143,7 @@
         enabled: yes
 
     - name: Enable and Start libvirtd-tcp.socket
-      when: ansible_distribution == "Fedora"
+      #when: ansible_distribution == "Fedora"
       systemd:
         name: libvirtd-tcp.socket
         state: restarted
@@ -292,12 +292,15 @@
         regexp: 'tcp_port'
         line: tcp_port = "16509"
 
-    - name: Configure libvirt LIBVIRTD_ARGS
-      when: ansible_distribution != "Fedora"        
-      lineinfile:
-        path: /etc/sysconfig/libvirtd
-        regexp: 'LIBVIRTD_ARGS'
-        line: LIBVIRTD_ARGS="--listen"
+
+# Not needed anymore, now you have to start libvirtd-tcp.socket
+#
+#    - name: Configure libvirt LIBVIRTD_ARGS
+#      when: ansible_distribution != "Fedora"        
+#      lineinfile:
+#        path: /etc/sysconfig/libvirtd
+#        regexp: 'LIBVIRTD_ARGS'
+#        line: LIBVIRTD_ARGS="--listen"
 
     - name: restart libvirt
       become: true
