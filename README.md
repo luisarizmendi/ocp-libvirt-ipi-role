@@ -83,9 +83,9 @@ There are some variables that you will need to modify to configure the environme
 
 * ocp_master_memory
 
-      description: Memory (in MB) for Master nodes
+      description: Memory (in GB) for Master nodes
 
-      default: 16384
+      default: 16
 
 * ocp_master_cpu
 
@@ -101,9 +101,9 @@ There are some variables that you will need to modify to configure the environme
 
 * ocp_worker_memory
 
-      description: Memory (in MB) for Master nodes
+      description: Memory (in GB) for Master nodes
 
-      default: 8192
+      default: 8
 
 * ocp_worker_cpu
 
@@ -222,10 +222,10 @@ Find below a playbook example where we call the role and include the variables t
       vars:
         ocp_install_file_path: "ocp-config/install-config.yaml"
         ocp_release: "4.4.0-rc.8"
-        ocp_master_memory: 16384
+        ocp_master_memory: 16
         ocp_master_cpu: 4
         ocp_master_disk: 150
-        ocp_worker_memory: 20480
+        ocp_worker_memory: 20
         ocp_worker_cpu: 4
         ocp_worker_disk: 150
         kvm_interface: "System eno1"
