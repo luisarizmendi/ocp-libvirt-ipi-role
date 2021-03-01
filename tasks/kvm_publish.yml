@@ -61,6 +61,7 @@
       firewall-cmd --permanent --add-forward-port=port={{ ocp_node_port_api }}:proto=tcp:toport=6443:toaddr=$API_VIP --zone=$ZONE_EXT
       firewall-cmd --permanent --add-forward-port=port={{ ocp_node_port_app_https }}:proto=tcp:toport=443:toaddr=$APPS_VIP --zone=$ZONE_EXT
       firewall-cmd --permanent --add-forward-port=port={{ ocp_node_port_app_http }}:proto=tcp:toport=80:toaddr=$APPS_VIP --zone=$ZONE_EXT
+      firewall-cmd --add-masquerade --zone=public --permanent
       firewall-cmd --reload
     when: kvm_firewall == "firewalld"
 
