@@ -219,13 +219,13 @@ There are other additional variables:
 
 * ocp_clean
 
-      description: Removes NFS and HAPRoxy from the node (WARNING: If you have deployed more than one OCP cluster in your node)
+      description: Removes NFS and HAPRoxy from the node 
       default: "true"
 
 
 * ocp_install_path
 
-      description: Directory used for OCP deployment (WARNING: If you have deployed more than one OCP cluster in your node)
+      description: Directory used for OCP deployment 
       default: "~/ocp"
 
 
