@@ -248,6 +248,7 @@
         sudo chown root:root /etc/pki/ca-trust/source/anchors/ingress-cacert-{{ metadata.name }}.pem
         sudo chmod 0644 /etc/pki/ca-trust/source/anchors/ingress-cacert-{{ metadata.name }}.pem
         sudo update-ca-trust extract
+        sudo rm tls.crt tls.key
 
     - name: Configure Autocompletion
       shell: "oc completion bash > oc_bash_completion   ;  sudo cp oc_bash_completion /etc/bash_completion.d/ ; yum install -y bash-completion"
