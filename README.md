@@ -217,6 +217,14 @@ There are other additional variables:
       default: "80"
 
 
+* ocp_clean
+
+      description: Removes NFS and HAPRoxy from the node (WARNING: If you have deployed more than one OCP cluster in your node)
+      default: "true"
+
+
+
+
 Example Playbook
 ----------------
 
