@@ -124,7 +124,7 @@ There are some variables that you will need to modify to configure the environme
       default: "eth0"
 
 
-There are other variables that shouldn't be modified unless you have
+There are other additional variables:
 
 
 * kvm_install
@@ -199,6 +199,22 @@ There are other variables that shouldn't be modified unless you have
 
       default: "R3dhat01"
 
+* ocp_node_port_api
+
+      description: Node port forwarded to OCP API
+      default: "6443"
+
+
+* ocp_node_port_app_https
+
+      description: Node port forwarded to APPs (HTTPS)
+      default: "443"
+
+
+* ocp_node_port_app_http
+
+      description: Node port forwarded to APPs (HTTP)
+      default: "80"
 
 
 Example Playbook

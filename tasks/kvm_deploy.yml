@@ -366,14 +366,14 @@
         - name: Finish Host network configuration
           when: controlPlane.replicas != 1
           copy:
-            dest:  /etc/NetworkManager/dnsmasq.d/openshift.conf
+            dest:  /etc/NetworkManager/dnsmasq.d/openshift-{{ metadata.name }}.conf
             content: |
               server=/{{ baseDomain }}/{{ ocp_cluster_net_gw }}
               address=/.apps.{{ metadata.name }}.{{ baseDomain }}/{{ ocp_apps_vip  }}
         - name: Finish Host network configuration
           when: controlPlane.replicas == 1
           copy:
-            dest:  /etc/NetworkManager/dnsmasq.d/openshift.conf
+            dest:  /etc/NetworkManager/dnsmasq.d/openshift-{{ metadata.name }}.conf
             content: |
               server=/{{ baseDomain }}/{{ ocp_cluster_net_gw }}
               address=/.apps.{{ metadata.name }}.{{ baseDomain }}/{{ ocp_api_vip  }}
@@ -381,7 +381,7 @@
     - name: DNS config with lb
       when: lb == "true"
       copy:
-        dest:  /etc/NetworkManager/dnsmasq.d/openshift.conf
+        dest:  /etc/NetworkManager/dnsmasq.d/openshift-{{ metadata.name }}.conf
         content: |
           server=/{{ baseDomain }}/{{ ocp_cluster_net_gw }}
           address=/.apps.{{ metadata.name }}.{{ baseDomain }}/{{ ocp_cluster_net_gw  }}

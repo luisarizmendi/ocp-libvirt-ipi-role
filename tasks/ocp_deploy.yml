@@ -244,9 +244,9 @@
       shell: |
         while [[ $(oc -n openshift-ingress get secret/router-certs-default | grep router-certs-default  > /dev/null ; echo $?) != "0" ]]; do echo "Waiting for router-certs-default object" && sleep 10; done
         oc -n openshift-ingress extract secret/router-certs-default
-        sudo cp tls.crt /etc/pki/ca-trust/source/anchors/ingress-cacert.pem
-        sudo chown root:root /etc/pki/ca-trust/source/anchors/ingress-cacert.pem
-        sudo chmod 0644 /etc/pki/ca-trust/source/anchors/ingress-cacert.pem
+        sudo cp tls.crt /etc/pki/ca-trust/source/anchors/ingress-cacert-{{ metadata.name }}.pem
+        sudo chown root:root /etc/pki/ca-trust/source/anchors/ingress-cacert-{{ metadata.name }}.pem
+        sudo chmod 0644 /etc/pki/ca-trust/source/anchors/ingress-cacert-{{ metadata.name }}.pem
         sudo update-ca-trust extract
 
     - name: Configure Autocompletion

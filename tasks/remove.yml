@@ -95,6 +95,24 @@
 
 
 
+    - name: Remove /etc/NetworkManager/conf.d/openshift.conf
+      file:
+        path: /etc/NetworkManager/conf.d/openshift.conf
+        state: absent
+
+    - name: Remove /etc/NetworkManager/dnsmasq.d/openshift-{{ metadata.name }}.conf
+      file:
+        path: /etc/NetworkManager/dnsmasq.d/openshift-{{ metadata.name }}.conf
+        state: absent
+
+
+    - name: Reload network
+      become: true
+      systemd:
+        name: NetworkManager
+        state: reloaded
+
+
     - name: Clean-up node
       when: ocp_clean  == "true"
       tags: remove
@@ -125,22 +143,18 @@
                 - not_nfs-utils
                 - not_rpcbind
 
-        - name: Remove /etc/NetworkManager/conf.d/openshift.conf
-          file:
-            path: /etc/NetworkManager/conf.d/openshift.conf
-            state: absent
-
-        - name: Remove /etc/NetworkManager/dnsmasq.d/openshift.conf
-          file:
-            path: /etc/NetworkManager/dnsmasq.d/openshift.conf
-            state: absent
-
-
-        - name: Reload network
+        - name: Configure Firewalld
           become: true
-          systemd:
-            name: NetworkManager
-            state: reloaded
+          ignore_errors: yes
+          shell: |
+            firewall-cmd --zone=libvirt --remove-service=libvirt --permanent
+            firewall-cmd --zone=libvirt --remove-service=nfs --permanent
+            firewall-cmd --zone=libvirt --remove-service=dns --permanent
+            firewall-cmd --zone=libvirt --remove-service=libvirttcp --permanent
+            firewall-cmd --zone=libvirt --remove-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
+            firewall-cmd --reload
+          when: kvm_firewall == "firewalld"
+
 
         - name: Configure DNS external servers
           shell: 'echo "nameserver 8.8.8.8" >> /etc/resolv.conf'
