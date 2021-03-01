@@ -61,3 +61,7 @@ ocp_install_install_release_image_registry: "quay.io/openshift-release-dev/ocp-r
 ocp_create_users: "true"
 ocp_users_password: "R3dhat01"
 ocp_clusteradmin_password: "R3dhat01"
+
+ocp_node_port_api: "6443"
+ocp_node_port_app_https: "443"
+ocp_node_port_app_http: "80"

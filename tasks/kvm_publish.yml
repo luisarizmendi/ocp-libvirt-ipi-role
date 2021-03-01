@@ -22,15 +22,15 @@
         APPS_VIP={{ ocp_cluster_net_gw }}
       fi
       iptables -I FORWARD 1 -i any -o any -j ACCEPT
-      iptables -I PREROUTING 1 -t nat -i $IFACE -p tcp --dport 6443 -j DNAT --to $API_VIP:6443
+      iptables -I PREROUTING 1 -t nat -i $IFACE -p tcp --dport {{ ocp_node_port_api }} -j DNAT --to $API_VIP:6443
       iptables -I FORWARD 1 -p tcp -d $API_VIP --dport 6443 -j ACCEPT
-      iptables -I PREROUTING 1 -t nat -i $IFACE -p tcp --dport 443 -j DNAT --to $APPS_VIP:443
+      iptables -I PREROUTING 1 -t nat -i $IFACE -p tcp --dport {{ ocp_node_port_app_https }} -j DNAT --to $APPS_VIP:443
       iptables -I FORWARD 1 -p tcp -d $APPS_VIP --dport 443 -j ACCEPT
-      iptables -I PREROUTING 1  -t nat -i $IFACE -p tcp --dport 80 -j DNAT --to $APPS_VIP:80
+      iptables -I PREROUTING 1  -t nat -i $IFACE -p tcp --dport {{ ocp_node_port_app_http }} -j DNAT --to $APPS_VIP:80
       iptables -I FORWARD 1 -p tcp -d $APPS_VIP --dport 80 -j ACCEPT
       iptables -I INPUT 1 -p tcp  --dport 6443 -j ACCEPT
-      iptables -I INPUT 1 -p tcp  --dport 443 -j ACCEPT
-      iptables -I INPUT 1 -p tcp  --dport 80 -j ACCEPT
+      iptables -I INPUT 1 -p tcp  --dport {{ ocp_node_port_app_https }} -j ACCEPT
+      iptables -I INPUT 1 -p tcp  --dport {{ ocp_node_port_app_http }} -j ACCEPT
       iptables-save > /etc/iptables.conf
     when: kvm_firewall == "iptables"
 
@@ -55,12 +55,12 @@
         API_VIP={{ ocp_cluster_net_gw }}
         APPS_VIP={{ ocp_cluster_net_gw }}
       fi
-      firewall-cmd --zone=$ZONE_EXT --add-service=http --permanent
-      firewall-cmd --zone=$ZONE_EXT --add-service=https --permanent
-      firewall-cmd --zone=$ZONE_EXT --add-service=ocpapi --permanent
-      firewall-cmd --permanent --add-forward-port=port=6443:proto=tcp:toport=6443:toaddr=$API_VIP --zone=$ZONE_EXT
-      firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=443:toaddr=$APPS_VIP --zone=$ZONE_EXT
-      firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=80:toaddr=$APPS_VIP --zone=$ZONE_EXT
+      firewall-cmd --zone=$ZONE_EXT --add-port={{ ocp_node_port_app_https }}/tcp --permanent
+      firewall-cmd --zone=$ZONE_EXT --add-port={{ ocp_node_port_app_http }}/tcp --permanent
+      firewall-cmd --zone=$ZONE_EXT --add-service=ocpapi{{ metadata.name }} --permanent
+      firewall-cmd --permanent --add-forward-port=port={{ ocp_node_port_api }}:proto=tcp:toport=6443:toaddr=$API_VIP --zone=$ZONE_EXT
+      firewall-cmd --permanent --add-forward-port=port={{ ocp_node_port_app_https }}:proto=tcp:toport=443:toaddr=$APPS_VIP --zone=$ZONE_EXT
+      firewall-cmd --permanent --add-forward-port=port={{ ocp_node_port_app_http }}:proto=tcp:toport=80:toaddr=$APPS_VIP --zone=$ZONE_EXT
       firewall-cmd --reload
     when: kvm_firewall == "firewalld"
 

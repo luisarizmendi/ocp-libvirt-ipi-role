@@ -225,9 +225,10 @@
         group: "{{ nfs_group }}"
       with_items:
         - "{{ nfs_export_path }}/"
-        - "{{ nfs_export_path }}/static"
-        - "{{ nfs_export_path }}/static/registry"
-        - "{{ nfs_export_path }}/dynamic"
+        - "{{ nfs_export_path }}/{{ metadata.name }}"
+        - "{{ nfs_export_path }}/{{ metadata.name }}/static"
+        - "{{ nfs_export_path }}/{{ metadata.name }}/static/registry"
+        - "{{ nfs_export_path }}/{{ metadata.name }}/dynamic"
 
     - name: FIX permissions
       shell: |
@@ -324,16 +325,16 @@
       become: true
       ignore_errors: yes
       shell: |
-        firewall-cmd --permanent --new-service=ocpapi
+        firewall-cmd --permanent --new-service=ocpapi{{ metadata.name }}
         firewall-cmd --permanent --new-service=libvirttcp
-        firewall-cmd --permanent --service=ocpapi --add-port=6443/tcp
+        firewall-cmd --permanent --service=ocpapi{{ metadata.name }} --add-port={{ ocp_node_port_api }}/tcp
         firewall-cmd --permanent --service=libvirttcp --add-port=16509/tcp
         firewall-cmd --zone=libvirt --add-service=libvirt --permanent
-        firewall-cmd --zone=libvirt --add-service=http --permanent
-        firewall-cmd --zone=libvirt --add-service=https --permanent
+        firewall-cmd --zone=libvirt --add-port={{ ocp_node_port_app_https }}/tcp --permanent
+        firewall-cmd --zone=libvirt --add-port={{ ocp_node_port_app_http }}/tcp --permanent
         firewall-cmd --zone=libvirt --add-service=dns --permanent
         firewall-cmd --zone=libvirt --add-service=nfs --permanent
-        firewall-cmd --zone=libvirt --add-service=ocpapi --permanent
+        firewall-cmd --zone=libvirt --add-service=ocpapi{{ metadata.name }} --permanent
         firewall-cmd --zone=libvirt --add-service=libvirttcp --permanent
         firewall-cmd --zone=libvirt --add-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
         firewall-cmd --reload

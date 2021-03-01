@@ -67,76 +67,80 @@
           API_VIP={{ ocp_cluster_net_gw }}
           APPS_VIP={{ ocp_cluster_net_gw }}
         fi
-        firewall-cmd --permanent --remove-forward-port=port=6443:proto=tcp:toport=6443:toaddr=$API_VIP --zone=$ZONE_EXT
-        firewall-cmd --permanent --remove-forward-port=port=443:proto=tcp:toport=443:toaddr=$APPS_VIP --zone=$ZONE_EXT
-        firewall-cmd --permanent --remove-forward-port=port=80:proto=tcp:toport=80:toaddr=$APPS_VIP --zone=$ZONE_EXT
-        firewall-cmd --zone=libvirt --remove-service=libvirt --permanent
-        firewall-cmd --zone=libvirt --remove-service=http --permanent
-        firewall-cmd --zone=libvirt --remove-service=https --permanent
-        firewall-cmd --zone=libvirt --remove-service=nfs --permanent
-        firewall-cmd --zone=libvirt --remove-service=dns --permanent
-        firewall-cmd --zone=libvirt --remove-service=ocpapi --permanent
-        firewall-cmd --zone=libvirt --remove-service=libvirttcp --permanent
-        firewall-cmd --zone=libvirt --remove-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
-        firewall-cmd --zone=$ZONE_EXT --remove-service=http --permanent
-        firewall-cmd --zone=$ZONE_EXT --remove-service=https --permanent
-        firewall-cmd --zone=$ZONE_EXT --remove-service=ocpapi --permanent
+        firewall-cmd --permanent --remove-forward-port=port={{ ocp_node_port_api }}:proto=tcp:toport=6443:toaddr=$API_VIP --zone=$ZONE_EXT
+        firewall-cmd --permanent --remove-forward-port=port={{ ocp_node_port_app_https }}:proto=tcp:toport=443:toaddr=$APPS_VIP --zone=$ZONE_EXT
+        firewall-cmd --permanent --remove-forward-port=port={{ ocp_node_port_app_http }}:proto=tcp:toport=80:toaddr=$APPS_VIP --zone=$ZONE_EXT
+        firewall-cmd --zone=libvirt --remove-port={{ ocp_node_port_app_https }}/tcp --permanent
+        firewall-cmd --zone=libvirt --remove-port={{ ocp_node_port_app_http }}/tcp --permanent
+        firewall-cmd --zone=libvirt --remove-service=ocpapi{{ metadata.name }} --permanent
+        #firewall-cmd --zone=libvirt --remove-service=libvirt --permanent
+        #firewall-cmd --zone=libvirt --remove-service=nfs --permanent
+        #firewall-cmd --zone=libvirt --remove-service=dns --permanent
+        #firewall-cmd --zone=libvirt --remove-service=libvirttcp --permanent
+        #firewall-cmd --zone=libvirt --remove-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
+        firewall-cmd --zone=$ZONE_EXT --remove-port={{ ocp_node_port_app_https }}/tcp --permanent
+        firewall-cmd --zone=$ZONE_EXT --remove-port={{ ocp_node_port_app_http }}/tcp --permanent
+        firewall-cmd --zone=$ZONE_EXT --remove-service=ocpapi{{ metadata.name }} --permanent
         firewall-cmd --reload
       when: kvm_firewall == "firewalld"
 
 
-    - name: Remove Load Balancer
-      when: lb  == "true"
+    - name: Remove NFS OCP dirs
+      ignore_errors: yes
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - "{{ nfs_export_path }}/{{ metadata.name }}"
+
+
+
+    - name: Clean-up node
+      when: ocp_clean  == "true"
+      tags: remove
       become: true
       block:
-        - name: Remove packages
-          when: remove_packages_on_destroy  == "true"
-          yum:
-            name:
-              - not_haproxy
-            state: removed
+        - name: Remove Load Balancer
+          #when: lb  == "true"
+          become: true
+          block:
+            - name: Remove packages
+              when: remove_packages_on_destroy  == "true"
+              yum:
+                name:
+                  - not_haproxy
+                state: removed
 
 
-    - name: Remove NFS
-      when: nfs_storage  == "true"
-      become: true
-      block:
-        - name: Remove packages
-          when: remove_packages_on_destroy  == "true"
-          yum:
-            state: removed
-            name: "{{ item }}"
-          with_items:
-            - not_nfs-utils
-            - not_rpcbind
+        - name: Remove NFS
+          #when: nfs_storage  == "true"
+          become: true
+          block:
+            - name: Remove packages
+              when: remove_packages_on_destroy  == "true"
+              yum:
+                state: removed
+                name: "{{ item }}"
+              with_items:
+                - not_nfs-utils
+                - not_rpcbind
 
-
-        - name: Remove NFS OCP dirs
-          ignore_errors: yes
+        - name: Remove /etc/NetworkManager/conf.d/openshift.conf
           file:
-            path: "{{ item }}"
+            path: /etc/NetworkManager/conf.d/openshift.conf
             state: absent
-          with_items:
-            - "{{ nfs_export_path }}"
+
+        - name: Remove /etc/NetworkManager/dnsmasq.d/openshift.conf
+          file:
+            path: /etc/NetworkManager/dnsmasq.d/openshift.conf
+            state: absent
 
 
+        - name: Reload network
+          become: true
+          systemd:
+            name: NetworkManager
+            state: reloaded
 
-    - name: Remove /etc/NetworkManager/conf.d/openshift.conf
-      file:
-        path: /etc/NetworkManager/conf.d/openshift.conf
-        state: absent
-
-    - name: Remove /etc/NetworkManager/dnsmasq.d/openshift.conf
-      file:
-        path: /etc/NetworkManager/dnsmasq.d/openshift.conf
-        state: absent
-
-
-    - name: Reload network
-      become: true
-      systemd:
-        name: NetworkManager
-        state: reloaded
-
-    - name: Configure DNS external servers
-      shell: 'echo "nameserver 8.8.8.8" >> /etc/resolv.conf'
+        - name: Configure DNS external servers
+          shell: 'echo "nameserver 8.8.8.8" >> /etc/resolv.conf'
