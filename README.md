@@ -223,6 +223,10 @@ There are other additional variables:
       default: "true"
 
 
+* ocp_install_path
+
+      description: Directory used for OCP deployment (WARNING: If you have deployed more than one OCP cluster in your node)
+      default: "~/ocp"
 
 
 Example Playbook
