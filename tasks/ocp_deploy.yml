@@ -93,6 +93,13 @@
     shell:
       chdir: "{{ kvm_workdir }}"
   block:
+    # Restart to avoid problems enabling bridges
+    - name: restart libvirt
+      become: true
+      systemd:
+        name: libvirtd
+        state: restarted
+
     - name: Create installation directory
       file:
         path: "{{ ocp_install_path }}/install"
