@@ -229,6 +229,27 @@ There are other additional variables:
       default: "~/ocp"
 
 
+* ocp_machine_network
+
+      description: Nodes CIDR
+      default: "192.168.126.0/24"
+
+* ocp_api_vip
+
+      description: VIP for API
+      default: "192.168.126.11"
+
+* ocp_apps_vip
+
+      description: VIP for APPs
+      default: "192.168.126.51"
+
+* ocp_cluster_net_gw
+
+      description: Default gateway for nodes
+      default: "192.168.126.1"
+
+
 Example Playbook
 ----------------
 
