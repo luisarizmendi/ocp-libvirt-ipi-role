@@ -337,6 +337,7 @@
         firewall-cmd --zone=libvirt --add-service=ocpapi{{ metadata.name }} --permanent
         firewall-cmd --zone=libvirt --add-service=libvirttcp --permanent
         firewall-cmd --zone=libvirt --add-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
+        firewall-cmd --add-masquerade --zone=public --permanent
         firewall-cmd --reload
       when: kvm_firewall == "firewalld"
 
