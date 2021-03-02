@@ -217,7 +217,7 @@
     - name: Reconfigure HAproxy
       shell: |
         sleep 60
-        sed -e s/'#TOCHANGE#'//g /etc/haproxy/haproxy.cfg
+        sed -i s/'#TOCHANGE#'//g /etc/haproxy/haproxy.cfg
         systemctl restart haproxy
       async: 100  
       poll: 0  
