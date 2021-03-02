@@ -122,6 +122,13 @@
           #when: lb  == "true"
           become: true
           block:
+
+            - name: Remove /etc/haproxy/haproxy.cfg
+              file:
+                path: /etc/haproxy/haproxy.cfg
+                state: absent
+
+
             - name: Remove packages
               when: remove_packages_on_destroy  == "true"
               yum:
