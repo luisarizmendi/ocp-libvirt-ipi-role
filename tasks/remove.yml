@@ -115,7 +115,8 @@
 
     - name: Remove HAPROXY frontend acl config for this cluster
       shell: |
-        sed -i "/{{ metadata.name }}/d" /etc/haproxy/haproxy.cfg
+        sed -i "/acl url_{{ metadata.name }}/d" /etc/haproxy/haproxy.cfg
+        sed -i "/use_backend {{ metadata.name }}/d" /etc/haproxy/haproxy.cfg
 
     - name: Remove HAPROXY backends config for this cluster
       blockinfile:
