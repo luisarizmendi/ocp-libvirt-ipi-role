@@ -116,7 +116,8 @@
     - name: Remove HAPROXY config for this cluster
       blockinfile:
         path: /etc/haproxy/haproxy.cfg
-        marker: "######## {{ metadata.name }} ########"
+        insertafter	: "######## {{ metadata.name }} start ########"
+        insertbefore	: "######## {{ metadata.name }} end ########"
         block: ""        
 
     - name: Clean-up node
