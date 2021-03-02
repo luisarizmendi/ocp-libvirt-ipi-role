@@ -113,6 +113,12 @@
         state: reloaded
 
 
+    - name: Remove HAPROXY config for this cluster
+      blockinfile:
+        path: /etc/haproxy/haproxy.cfg
+        marker: "######## {{ metadata.name }} ########"
+        block: ""        
+
     - name: Clean-up node
       when: ocp_clean  == "true"
       tags: remove
