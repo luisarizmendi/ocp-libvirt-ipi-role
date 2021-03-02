@@ -3,7 +3,7 @@
 
 frontend {{ metadata.name }}-openshift-api-server
     bind *:{{ ocp_node_port_api }}
-    default_backend openshift-api-server
+    default_backend {{ metadata.name }}-openshift-api-server
     mode tcp
     option tcplog
 
@@ -23,7 +23,7 @@ backend {{ metadata.name }}-openshift-api-server
 
 frontend {{ metadata.name }}-ingress-http
     bind *:{{ ocp_node_port_app_http }}
-    default_backend ingress-http
+    default_backend {{ metadata.name }}-ingress-http
     mode tcp
     option tcplog
 
@@ -36,7 +36,7 @@ backend {{ metadata.name }}-ingress-http
 
 frontend {{ metadata.name }}-ingress-https
     bind *:{{ ocp_node_port_app_https }}
-    default_backend ingress-https
+    default_backend {{ metadata.name }}-ingress-https
     mode tcp
     option tcplog
 
