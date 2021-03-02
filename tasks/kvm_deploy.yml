@@ -237,7 +237,7 @@
                   option tcplog
               frontend ingress-https
                   bind *:443
-                  default_backend default-ingress-securehttps
+                  default_backend default-ingress-https
                   mode tcp
                   option tcplog
               backend default-openshift-api-server
@@ -288,26 +288,27 @@
             insertafter: '    default_backend default-ingress-http'
             line: "    acl url_{{ metadata.name }} req.ssl_sni -m end .{{ metadata.name }}.{{ baseDomain }}"
 
-        - name: Create /tmp/fragments/ directory if it does not exist
-          ansible.builtin.file:
-            path: /tmp/fragments/
-            state: directory
-
         - name: Create backends haproxy file
           template:
             src: haproxy.cfg.back.j2
-            dest: /tmp/fragments/haproxy.cfg.back.tmp
+            dest: haproxy.cfg.back.tmp
+
+
+        - name: Remove HAPROXY backends config for this cluster
+          blockinfile:
+            path: /etc/haproxy/haproxy.cfg
+            marker: "######## {{ metadata.name }} {mark} ########"
+            state: absent
 
 
         - name: Create haproxy file
-          assemble:
-            src: /tmp/fragments
-            dest: /etc/haproxy/haproxy.cfg
-            delimiter: '######## {{ metadata.name }} ########'
+          shell: |
+            cat haproxy.cfg.back.tmp >> /etc/haproxy/haproxy.cfg
+
 
         - name: Remove temp file for haproxy config
           file:
-            path: /tmp/fragments/haproxy.cfg.back.tmp
+            path: haproxy.cfg.back.tmp
             state: absent
 
         - name: SEBool allow haproxy connect any port

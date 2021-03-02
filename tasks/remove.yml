@@ -122,7 +122,7 @@
     - name: Remove HAPROXY backends config for this cluster
       blockinfile:
         path: /etc/haproxy/haproxy.cfg
-        marker: "######## {{ metadata.name }} ########"
+        marker: "######## {{ metadata.name }} {mark} ########"
         state: absent
 
       
