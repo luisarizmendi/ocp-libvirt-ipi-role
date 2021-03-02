@@ -237,7 +237,7 @@
                   option tcplog
               frontend ingress-https
                   bind *:443
-                  default_backend default-ingress-https
+                  default_backend default-ingress-securehttps
                   mode tcp
                   option tcplog
               backend default-openshift-api-server
