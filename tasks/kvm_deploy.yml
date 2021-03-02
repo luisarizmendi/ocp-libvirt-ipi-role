@@ -261,7 +261,7 @@
           ansible.builtin.lineinfile:
             path: /etc/haproxy/haproxy.cfg
             insertafter: '    default_backend default-openshift-api-server'
-            line: "    acl url_api_{{ metadata.name }} req.ssl_sni -m end .{{ metadata.name }}.{{ baseDomain }}"
+            line: "    acl url_api_{{ metadata.name }} hdr_sub(host) -i {{ metadata.name }}.{{ baseDomain }}"
 
 
         - name: Create ACL in HAproxy frontend HTTPS
@@ -274,7 +274,7 @@
           ansible.builtin.lineinfile:
             path: /etc/haproxy/haproxy.cfg
             insertafter: '    default_backend default-ingress-securehttps'
-            line: "    acl url_https_{{ metadata.name }} req.ssl_sni -m end .{{ metadata.name }}.{{ baseDomain }}"
+            line: "    acl url_https_{{ metadata.name }} hdr_sub(host) -i {{ metadata.name }}.{{ baseDomain }}"
 
         - name: Create ACL in HAproxy frontend HTTP
           ansible.builtin.lineinfile:
@@ -286,7 +286,7 @@
           ansible.builtin.lineinfile:
             path: /etc/haproxy/haproxy.cfg
             insertafter: '    default_backend default-ingress-http'
-            line: "    acl url_http_{{ metadata.name }} req.ssl_sni -m end .{{ metadata.name }}.{{ baseDomain }}"
+            line: "    acl url_http_{{ metadata.name }} hdr_sub(host) -i {{ metadata.name }}.{{ baseDomain }}"
 
         - name: Create backends haproxy file
           template:
