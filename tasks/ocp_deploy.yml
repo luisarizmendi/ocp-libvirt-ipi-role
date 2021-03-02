@@ -213,6 +213,17 @@
         dest: "{{ ocp_install_path }}/single-master-patch.sh"
         mode: '0775'
 
+    # Reconfigure HAproxy
+    - name: Reconfigure HAproxy
+      shell: |
+        sleep 300
+        sed -e s/'#TOCHANGE#'//g /etc/haproxy/haproxy.cfg
+        systemctl restart haproxy
+      async: 600  
+      poll: 0  
+
+
+
     - name: Display message about OpenShift install
       debug:
         msg: "The next task - OpenShift Install - It might take some time to produce any output, please be patient. Thank you."

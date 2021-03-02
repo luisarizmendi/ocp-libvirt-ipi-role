@@ -3,7 +3,7 @@
 
 frontend {{ metadata.name }}-openshift-api-server
     bind {{ publicaddress.stdout  }}:{{ ocp_node_port_api }}
-    bind {{ ocp_cluster_net_gw }}:6443
+    #TOCHANGE#bind {{ ocp_cluster_net_gw }}:6443
     default_backend {{ metadata.name }}-openshift-api-server
     mode tcp
     option tcplog
@@ -24,7 +24,7 @@ backend {{ metadata.name }}-openshift-api-server
 
 frontend {{ metadata.name }}-ingress-http
     bind {{ publicaddress.stdout  }}:{{ ocp_node_port_app_http }}
-    bind {{ ocp_cluster_net_gw }}:80
+    #TOCHANGE#bind {{ ocp_cluster_net_gw }}:80
     default_backend {{ metadata.name }}-ingress-http
     mode tcp
     option tcplog
@@ -38,7 +38,7 @@ backend {{ metadata.name }}-ingress-http
 
 frontend {{ metadata.name }}-ingress-https
     bind {{ publicaddress.stdout  }}:{{ ocp_node_port_app_https }}
-    bind {{ ocp_cluster_net_gw }}:443
+    #TOCHANGE#bind {{ ocp_cluster_net_gw }}:443
     default_backend {{ metadata.name }}-ingress-https
     mode tcp
     option tcplog
