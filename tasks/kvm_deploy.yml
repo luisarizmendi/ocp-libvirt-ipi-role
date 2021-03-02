@@ -176,6 +176,12 @@
 #            src: haproxy.cfg.j2
 #            dest: /etc/haproxy/haproxy.cfg
 
+
+        - name: Check existence of /etc/haproxy/haproxy.cfg
+          file:
+            path: /etc/haproxy/haproxy.cfg
+            state: present
+
         - name: Write out haproxy config file header
           blockinfile:
             path: /etc/haproxy/haproxy.cfg
