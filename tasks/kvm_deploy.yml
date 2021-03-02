@@ -177,6 +177,11 @@
 #            dest: /etc/haproxy/haproxy.cfg
 
 
+        - name: Get Firewalld ZONE
+          shell: "IFADDR=$(nmcli con show '{{ kvm_interface }}' | grep ipv4.addresses | awk -F ':                         ' '{print $2}' | awk -F / '{print $1}' ; echo $IFADDR"
+          register: publicaddress
+
+
         - name: Write out haproxy config file header
           blockinfile:
             path: /etc/haproxy/haproxy.cfg
