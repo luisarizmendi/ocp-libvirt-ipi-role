@@ -1,3 +1,5 @@
+######## {{ metadata.name }} ########
+
 frontend openshift-api-server
     bind *:6443
     default_backend openshift-api-server
@@ -11,15 +13,12 @@ backend openshift-api-server
     server master-{{ loop.index0 }} {{ ocp_api_vip |ipmath( loop.index0 ) }}:6443 check
 {% endfor %}
 
-
-
 {% if compute.0.replicas == 0 %}
 {% set nodes = controlPlane.replicas %}
 {% set ocp_apps_vip = ocp_api_vip %}
 {% else %}
 {% set nodes = compute.0.replicas %}
 {% endif %}
-
 
 frontend ingress-http
     bind *:80
@@ -47,4 +46,4 @@ backend ingress-https
     server worker-https-router-{{ loop.index0 }} {{ ocp_apps_vip | ipmath( loop.index0 ) }}:443 check
 {% endfor %}
 
-#---------------------------------------------------------------------
+######## {{ metadata.name }} ########
