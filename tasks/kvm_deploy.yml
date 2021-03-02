@@ -221,10 +221,24 @@
             dest: haproxy.cfg.tmp
 
 
-        - assemble:
-            src: haproxy.cfg.tmp
-            dest: /etc/haproxy/haproxy.cfg
-            delimiter: "### {{ metadata.name }} ###"
+        - name: Add label in haproxy config (start)
+          blockinfile:
+            path: haproxy.cfg.tmp
+            insertbefore: BOF
+            block: |
+              # {{ metadata.name }} start
+
+        - name: Add label in haproxy config (end)
+          blockinfile:
+            path: haproxy.cfg.tmp
+            insertafter: EOF
+            block: |
+              # {{ metadata.name }} end
+
+
+        - name: Create haproxy file
+          shell: |
+            cat haproxy.cfg.tmp >> /etc/haproxy/haproxy.cfg
 
 
         - name: Remove temp file for haproxy config
