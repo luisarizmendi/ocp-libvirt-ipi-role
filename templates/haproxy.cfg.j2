@@ -1,13 +1,13 @@
 
 ######## {{ metadata.name }} BEGIN ########
 
-frontend openshift-api-server
+frontend {{ metadata.name }}-openshift-api-server
     bind *:{{ ocp_node_port_api }}
     default_backend openshift-api-server
     mode tcp
     option tcplog
 
-backend openshift-api-server
+backend {{ metadata.name }}-openshift-api-server
     balance source
     mode tcp
 {% for m in range(0, controlPlane.replicas) %}
@@ -21,26 +21,26 @@ backend openshift-api-server
 {% set nodes = compute.0.replicas %}
 {% endif %}
 
-frontend ingress-http
+frontend {{ metadata.name }}-ingress-http
     bind *:{{ ocp_node_port_app_http }}
     default_backend ingress-http
     mode tcp
     option tcplog
 
-backend ingress-http
+backend {{ metadata.name }}-ingress-http
     balance source
     mode tcp
 {% for w in range(0, nodes) %}
     server {{ metadata.name }}-worker-http-router-{{ loop.index0 }} {{ ocp_apps_vip | ipmath( loop.index0 ) }}:80 check
 {% endfor %}
 
-frontend ingress-https
+frontend {{ metadata.name }}-ingress-https
     bind *:{{ ocp_node_port_app_https }}
     default_backend ingress-https
     mode tcp
     option tcplog
 
-backend ingress-https
+backend {{ metadata.name }}-ingress-https
     balance source
     mode tcp
 {% for w in range(0, nodes) %}
