@@ -116,9 +116,10 @@
     - name: Remove HAPROXY config for this cluster
       blockinfile:
         path: /etc/haproxy/haproxy.cfg
-        insertafter	: "######## {{ metadata.name }} start ########"
-        insertbefore	: "######## {{ metadata.name }} end ########"
-        block: ""        
+        marker: "######## {{ metadata.name }} {mark} ########"
+        state: absent
+
+      
 
     - name: Clean-up node
       when: ocp_clean  == "true"

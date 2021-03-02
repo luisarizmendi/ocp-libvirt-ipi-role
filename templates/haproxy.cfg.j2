@@ -1,5 +1,5 @@
 
-######## {{ metadata.name }} start ########
+######## {{ metadata.name }} BEGIN ########
 
 frontend openshift-api-server
     bind *:{{ ocp_node_port_api }}
@@ -47,4 +47,4 @@ backend ingress-https
     server worker-https-router-{{ loop.index0 }} {{ ocp_apps_vip | ipmath( loop.index0 ) }}:443 check
 {% endfor %}
 
-######## {{ metadata.name }} end ########
+######## {{ metadata.name }} END ########
