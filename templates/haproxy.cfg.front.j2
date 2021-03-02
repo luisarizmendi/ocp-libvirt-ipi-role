@@ -1,0 +1,21 @@
+
+
+frontend openshift-api-server
+    bind *:6443
+    default_backend {{ metadata.name }}-openshift-api-server
+    mode tcp
+    option tcplog
+
+
+frontend ingress-http
+    bind *:80
+    default_backend {{ metadata.name }}-ingress-http
+    mode tcp
+    option tcplog
+
+frontend ingress-https
+    bind *:443
+    default_backend {{ metadata.name }}-ingress-https
+    mode tcp
+    option tcplog
+

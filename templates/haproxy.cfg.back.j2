@@ -1,13 +1,6 @@
 
 ######## {{ metadata.name }} BEGIN ########
 
-frontend {{ metadata.name }}-openshift-api-server
-    bind {{ publicaddress.stdout  }}:{{ ocp_node_port_api }}
-    #TOCHANGE#bind {{ ocp_cluster_net_gw }}:6443
-    default_backend {{ metadata.name }}-openshift-api-server
-    mode tcp
-    option tcplog
-
 backend {{ metadata.name }}-openshift-api-server
     balance source
     mode tcp
@@ -22,12 +15,6 @@ backend {{ metadata.name }}-openshift-api-server
 {% set nodes = compute.0.replicas %}
 {% endif %}
 
-frontend {{ metadata.name }}-ingress-http
-    bind {{ publicaddress.stdout  }}:{{ ocp_node_port_app_http }}
-    #TOCHANGE#bind {{ ocp_cluster_net_gw }}:80
-    default_backend {{ metadata.name }}-ingress-http
-    mode tcp
-    option tcplog
 
 backend {{ metadata.name }}-ingress-http
     balance source
@@ -36,12 +23,6 @@ backend {{ metadata.name }}-ingress-http
     server {{ metadata.name }}-worker-http-router-{{ loop.index0 }} {{ ocp_apps_vip | ipmath( loop.index0 ) }}:80 check
 {% endfor %}
 
-frontend {{ metadata.name }}-ingress-https
-    bind {{ publicaddress.stdout  }}:{{ ocp_node_port_app_https }}
-    #TOCHANGE#bind {{ ocp_cluster_net_gw }}:443
-    default_backend {{ metadata.name }}-ingress-https
-    mode tcp
-    option tcplog
 
 backend {{ metadata.name }}-ingress-https
     balance source

@@ -199,23 +199,6 @@ There are other additional variables:
 
       default: "R3dhat01"
 
-* ocp_node_port_api
-
-      description: Node port forwarded to OCP API
-      default: "6443"
-
-
-* ocp_node_port_app_https
-
-      description: Node port forwarded to APPs (HTTPS)
-      default: "443"
-
-
-* ocp_node_port_app_http
-
-      description: Node port forwarded to APPs (HTTP)
-      default: "80"
-
 
 * ocp_clean
 
@@ -497,14 +480,11 @@ platform:
 ...
 ```
 
-In ocp_libvirt_ipi.yaml  you must select another directory for the OCP install files, new TCP ports, new network config and mark the ocp_clean variable to "false", so in case that you remove this second cluster the first one will keep working (otherwise it will remove haproxy services and firewalld configurations that are needed to run it)
+In ocp_libvirt_ipi.yaml  you must select another directory for the OCP install files,  new network config and mark the ocp_clean variable to "false", so in case that you remove this second cluster the first one will keep working (otherwise it will remove haproxy services and firewalld configurations that are needed to run it)
 
 ```
 ...
         ocp_install_path: "/root/ocp2"
-        ocp_node_port_api: "16443"
-        ocp_node_port_app_https: "1443"
-        ocp_node_port_app_http: "180"
         ocp_clean: "false"
         ocp_machine_network: "192.168.127.0/24"
         ocp_api_vip: "192.168.127.11"

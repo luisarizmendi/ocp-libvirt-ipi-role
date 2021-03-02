@@ -220,22 +220,55 @@
                   stats enable
                   stats uri /
                   monitor-uri /healthz
+              frontend openshift-api-server
+                  bind *:6443
+                  default_backend default-openshift-api-server
+                  mode tcp
+                  option tcplog
+              frontend ingress-http
+                  bind *:80
+                  default_backend default-ingress-http
+                  mode tcp
+                  option tcplog
+              frontend ingress-https
+                  bind *:443
+                  default_backend default-ingress-https
+                  mode tcp
+                  option tcplog
+              backend default-openshift-api-server
+                  balance source
+                  mode tcp
+              backend default-ingress-http
+                  balance source
+                  mode tcp
+              backend default-ingress-https
+                  balance source
+                  mode tcp
 
 
-        - name: Create haproxy file
+        - name: Create ACL in HAproxy frontend API
+          ansible.builtin.lineinfile:
+            path: /etc/selinux/config
+            regexp: '*default_backend default-openshift-api-server'
+            line: |
+                  acl url_{{ metadata.name }} req.ssl_sni -m end .{{ metadata.name }}.{{ baseDomain }}
+                  use_backend {{ metadata.name }}-openshift-api-server if url_{{ metadata.name }}
+
+
+        - name: Create backends haproxy file
           template:
-            src: haproxy.cfg.j2
-            dest: haproxy.cfg.tmp
+            src: haproxy.cfg.back.j2
+            dest: haproxy.cfg.back.tmp
 
 
         - name: Create haproxy file
           shell: |
-            cat haproxy.cfg.tmp >> /etc/haproxy/haproxy.cfg
+            cat haproxy.cfg.back.tmp >> /etc/haproxy/haproxy.cfg
 
 
         - name: Remove temp file for haproxy config
           file:
-            path: haproxy.cfg.tmp
+            path: haproxy.cfg.back.tmp
             state: absent
 
         - name: SEBool allow haproxy connect any port
@@ -387,16 +420,16 @@
       become: true
       ignore_errors: yes
       shell: |
-        firewall-cmd --permanent --new-service=ocpapi{{ metadata.name }}
+        firewall-cmd --permanent --new-service=ocpapi
         firewall-cmd --permanent --new-service=libvirttcp
-        firewall-cmd --permanent --service=ocpapi{{ metadata.name }} --add-port={{ ocp_node_port_api }}/tcp
+        firewall-cmd --permanent --service=ocpapi --add-port=6443/tcp
         firewall-cmd --permanent --service=libvirttcp --add-port=16509/tcp
         firewall-cmd --zone=libvirt --add-service=libvirt --permanent
-        firewall-cmd --zone=libvirt --add-port={{ ocp_node_port_app_https }}/tcp --permanent
-        firewall-cmd --zone=libvirt --add-port={{ ocp_node_port_app_http }}/tcp --permanent
+        firewall-cmd --zone=libvirt --add-port=443/tcp --permanent
+        firewall-cmd --zone=libvirt --add-port=80/tcp --permanent
         firewall-cmd --zone=libvirt --add-service=dns --permanent
         firewall-cmd --zone=libvirt --add-service=nfs --permanent
-        firewall-cmd --zone=libvirt --add-service=ocpapi{{ metadata.name }} --permanent
+        firewall-cmd --zone=libvirt --add-service=ocpapi --permanent
         firewall-cmd --zone=libvirt --add-service=libvirttcp --permanent
         firewall-cmd --zone=libvirt --add-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
         firewall-cmd --add-masquerade --zone=public --permanent

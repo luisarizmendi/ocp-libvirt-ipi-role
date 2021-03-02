@@ -60,6 +60,3 @@ ocp_clusteradmin_password: "R3dhat01"
 
 
 ocp_clean: "true"
-ocp_node_port_api: "6443"
-ocp_node_port_app_https: "443"
-ocp_node_port_app_http: "80"

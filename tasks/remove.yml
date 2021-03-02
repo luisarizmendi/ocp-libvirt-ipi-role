@@ -67,20 +67,20 @@
           API_VIP={{ ocp_cluster_net_gw }}
           APPS_VIP={{ ocp_cluster_net_gw }}
         fi
-        firewall-cmd --permanent --remove-forward-port=port={{ ocp_node_port_api }}:proto=tcp:toport=6443:toaddr=$API_VIP --zone=$ZONE_EXT
-        firewall-cmd --permanent --remove-forward-port=port={{ ocp_node_port_app_https }}:proto=tcp:toport=443:toaddr=$APPS_VIP --zone=$ZONE_EXT
-        firewall-cmd --permanent --remove-forward-port=port={{ ocp_node_port_app_http }}:proto=tcp:toport=80:toaddr=$APPS_VIP --zone=$ZONE_EXT
-        firewall-cmd --zone=libvirt --remove-port={{ ocp_node_port_app_https }}/tcp --permanent
-        firewall-cmd --zone=libvirt --remove-port={{ ocp_node_port_app_http }}/tcp --permanent
-        firewall-cmd --zone=libvirt --remove-service=ocpapi{{ metadata.name }} --permanent
+        firewall-cmd --permanent --remove-forward-port=port=6443:proto=tcp:toport=6443:toaddr=$API_VIP --zone=$ZONE_EXT
+        firewall-cmd --permanent --remove-forward-port=port=443:proto=tcp:toport=443:toaddr=$APPS_VIP --zone=$ZONE_EXT
+        firewall-cmd --permanent --remove-forward-port=port=80:proto=tcp:toport=80:toaddr=$APPS_VIP --zone=$ZONE_EXT
+        firewall-cmd --zone=libvirt --remove-port=443/tcp --permanent
+        firewall-cmd --zone=libvirt --remove-port=80/tcp --permanent
+        firewall-cmd --zone=libvirt --remove-service=ocpapi --permanent
         #firewall-cmd --zone=libvirt --remove-service=libvirt --permanent
         #firewall-cmd --zone=libvirt --remove-service=nfs --permanent
         #firewall-cmd --zone=libvirt --remove-service=dns --permanent
         #firewall-cmd --zone=libvirt --remove-service=libvirttcp --permanent
         #firewall-cmd --zone=libvirt --remove-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
-        firewall-cmd --zone=$ZONE_EXT --remove-port={{ ocp_node_port_app_https }}/tcp --permanent
-        firewall-cmd --zone=$ZONE_EXT --remove-port={{ ocp_node_port_app_http }}/tcp --permanent
-        firewall-cmd --zone=$ZONE_EXT --remove-service=ocpapi{{ metadata.name }} --permanent
+        firewall-cmd --zone=$ZONE_EXT --remove-port=443/tcp --permanent
+        firewall-cmd --zone=$ZONE_EXT --remove-port=80/tcp --permanent
+        firewall-cmd --zone=$ZONE_EXT --remove-service=ocpapi --permanent
         firewall-cmd --reload
       when: kvm_firewall == "firewalld"
 
@@ -113,7 +113,11 @@
         state: reloaded
 
 
-    - name: Remove HAPROXY config for this cluster
+    - name: Remove HAPROXY frontend acl config for this cluster
+      shell: |
+        sed -i "/{{ metadata.name }}/d" /etc/haproxy/haproxy.cfg
+
+    - name: Remove HAPROXY backends config for this cluster
       blockinfile:
         path: /etc/haproxy/haproxy.cfg
         marker: "######## {{ metadata.name }} {mark} ########"
