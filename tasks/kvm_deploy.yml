@@ -267,25 +267,25 @@
         - name: Create ACL in HAproxy frontend HTTPS
           ansible.builtin.lineinfile:
             path: /etc/haproxy/haproxy.cfg
-            insertafter: '    default_backend default-oocp2-ingress-https'
-            line: "    use_backend {{ metadata.name }}-ocp2-ingress-https if url_{{ metadata.name }}"
+            insertafter: '    default_backend default-ingress-https'
+            line: "    use_backend {{ metadata.name }}-ingress-https if url_{{ metadata.name }}"
 
         - name: Create ACL in HAproxy frontend HTTPS
           ansible.builtin.lineinfile:
             path: /etc/haproxy/haproxy.cfg
-            insertafter: '    default_backend default-ocp2-ingress-https'
+            insertafter: '    default_backend default-ingress-https'
             line: "    acl url_{{ metadata.name }} req.ssl_sni -m end .{{ metadata.name }}.{{ baseDomain }}"
 
         - name: Create ACL in HAproxy frontend HTTP
           ansible.builtin.lineinfile:
             path: /etc/haproxy/haproxy.cfg
-            insertafter: '    default_backend default-ocp2-ingress-http'
-            line: "    use_backend {{ metadata.name }}-ocp2-ingress-http if url_{{ metadata.name }}"
+            insertafter: '    default_backend default-ingress-http'
+            line: "    use_backend {{ metadata.name }}-ingress-http if url_{{ metadata.name }}"
 
         - name: Create ACL in HAproxy frontend HTTP
           ansible.builtin.lineinfile:
             path: /etc/haproxy/haproxy.cfg
-            insertafter: '    default_backend default-ocp2-ingress-http'
+            insertafter: '    default_backend default-ingress-http'
             line: "    acl url_{{ metadata.name }} req.ssl_sni -m end .{{ metadata.name }}.{{ baseDomain }}"
 
         - name: Create backends haproxy file
