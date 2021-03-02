@@ -472,6 +472,48 @@ Terraform libvirt plugin does not make dhcp host entries persistent, so if you r
 
 If you need to add extra manifests to the installation, put them on a folder called `extra_manifests` and they will be copied over to the manifests folder before the installation begins. 
 
+
+### Running more than one OpenShift deployment on a single node
+
+Now you can run more than one OCP cluster in your node if you have enough resources. You just need to deploy your first cluster and then launch the second cluster adding some variables into your config files, for example:
+
+In install-config you must change the machine network (networking.machineNetwork), the cluster name (metadata.name) and the bridge that will be used by libvirt (platform.libvirt.network.if):
+
+```
+...
+metadata:
+  creationTimestamp: null
+  name: ocp2
+networking:
+...
+  machineNetwork:
+  - cidr: 192.168.127.0/24
+...
+platform:
+  libvirt:
+    URI: qemu+tcp://46.4.65.190/system
+    network:
+      if: ocp2
+...
+```
+
+In ocp_libvirt_ipi.yaml  you must select another directory for the OCP install files, new TCP ports, new network config and mark the ocp_clean variable to "false", so in case that you remove this second cluster the first one will keep working (otherwise it will remove haproxy services and firewalld configurations that are needed to run it)
+
+```
+...
+        ocp_install_path: "/root/ocp2"
+        ocp_node_port_api: "16443"
+        ocp_node_port_app_https: "1443"
+        ocp_node_port_app_http: "180"
+        ocp_clean: "false"
+        ocp_machine_network: "192.168.127.0/24"
+        ocp_api_vip: "192.168.127.11"
+        ocp_apps_vip: "192.168.127.51"
+        ocp_cluster_net_gw: "192.168.127.1"
+```
+
+
+
 Enjoy
 -----------------
 
