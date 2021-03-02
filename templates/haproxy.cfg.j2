@@ -2,7 +2,7 @@
 ######## {{ metadata.name }} BEGIN ########
 
 frontend {{ metadata.name }}-openshift-api-server
-    bind {{ publicaddress }}:{{ ocp_node_port_api }}
+    bind {{ publicaddress.stdout  }}:{{ ocp_node_port_api }}
     bind {{ ocp_cluster_net_gw }}:6443
     default_backend {{ metadata.name }}-openshift-api-server
     mode tcp
@@ -23,7 +23,7 @@ backend {{ metadata.name }}-openshift-api-server
 {% endif %}
 
 frontend {{ metadata.name }}-ingress-http
-    bind {{ publicaddress }}:{{ ocp_node_port_app_http }}
+    bind {{ publicaddress.stdout  }}:{{ ocp_node_port_app_http }}
     bind {{ ocp_cluster_net_gw }}:80
     default_backend {{ metadata.name }}-ingress-http
     mode tcp
@@ -37,7 +37,7 @@ backend {{ metadata.name }}-ingress-http
 {% endfor %}
 
 frontend {{ metadata.name }}-ingress-https
-    bind {{ publicaddress }}:{{ ocp_node_port_app_https }}
+    bind {{ publicaddress.stdout  }}:{{ ocp_node_port_app_https }}
     bind {{ ocp_cluster_net_gw }}:443
     default_backend {{ metadata.name }}-ingress-https
     mode tcp
