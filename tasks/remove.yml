@@ -10,80 +10,6 @@
         {{ ocp_install_path }}/artifacts/openshift-installer-{{ ocp_release }}/openshift-install destroy cluster --dir {{ ocp_install_path }}/install/
         rm -rf {{ ocp_install_path }}/install/
 
-- name: Install KVM
-  when: kvm_configure  == "true"
-  tags: remove
-  become: true
-  block:
-    - name:  Unpublish
-      ignore_errors: yes
-      shell: |
-        set -x
-        # Unpublishing
-        if [ {{ compute.0.replicas }} -ne 0 ]
-        then
-          API_VIP={{ ocp_api_vip }}
-          APPS_VIP={{ ocp_apps_vip }}
-        else
-          API_VIP={{ ocp_api_vip }}
-          APPS_VIP={{ ocp_api_vip }}
-        fi
-        if [ {{ lb }} == "true" ]
-        then
-          API_VIP={{ ocp_cluster_net_gw }}
-          APPS_VIP={{ ocp_cluster_net_gw }}
-        fi
-        iptables -D INPUT -p tcp  --dport 6443 -j ACCEPT
-        iptables -D INPUT -p tcp  --dport 80 -j ACCEPT
-        iptables -D INPUT -p tcp  --dport 443 -j ACCEPT
-        iptables -D PREROUTING -t nat -i {{ kvm_interface }} -p tcp --dport 6443 -j DNAT --to $API_VIP:6443
-        iptables -D FORWARD -p tcp -d $API_VIP --dport 6443 -j ACCEPT
-        iptables -D PREROUTING -t nat -i {{ kvm_interface }} -p tcp --dport 443 -j DNAT --to $APPS_VIP:443
-        iptables -D FORWARD -p tcp -d $APPS_VIP --dport 443 -j ACCEPT
-        iptables -D PREROUTING -t nat -i {{ kvm_interface }} -p tcp --dport 80 -j DNAT --to $APPS_VIP:80
-        iptables -D FORWARD -p tcp -d $APPS_VIP --dport 80 -j ACCEPT
-        iptables -D FORWARD -i any -o any -j ACCEPT
-      when: kvm_firewall == "iptables"
-
-
-
-    - name: Configure Firewalld
-      become: true
-      ignore_errors: yes
-      shell: |
-        IFACE=$(nmcli con show "{{ kvm_interface }}" | grep connection.interface-name | awk '{print $2}')
-        ZONE_EXT=$(firewall-cmd --list-all-zones | grep -B 3 $IFACE | head -n 1 | awk '{print $1}')
-        # Publishing
-        if [ {{ compute.0.replicas }} -ne 0 ]
-        then
-          API_VIP={{ ocp_api_vip }}
-          APPS_VIP={{ ocp_apps_vip }}
-        else
-          API_VIP={{ ocp_api_vip }}
-          APPS_VIP={{ ocp_api_vip }}
-        fi
-        if [ {{ lb }} == "true" ]
-        then
-          API_VIP={{ ocp_cluster_net_gw }}
-          APPS_VIP={{ ocp_cluster_net_gw }}
-        fi
-        firewall-cmd --permanent --remove-forward-port=port=6443:proto=tcp:toport=6443:toaddr=$API_VIP --zone=$ZONE_EXT
-        firewall-cmd --permanent --remove-forward-port=port=443:proto=tcp:toport=443:toaddr=$APPS_VIP --zone=$ZONE_EXT
-        firewall-cmd --permanent --remove-forward-port=port=80:proto=tcp:toport=80:toaddr=$APPS_VIP --zone=$ZONE_EXT
-        firewall-cmd --zone=libvirt --remove-port=443/tcp --permanent
-        firewall-cmd --zone=libvirt --remove-port=80/tcp --permanent
-        firewall-cmd --zone=libvirt --remove-service=ocpapi --permanent
-        #firewall-cmd --zone=libvirt --remove-service=libvirt --permanent
-        #firewall-cmd --zone=libvirt --remove-service=nfs --permanent
-        #firewall-cmd --zone=libvirt --remove-service=dns --permanent
-        #firewall-cmd --zone=libvirt --remove-service=libvirttcp --permanent
-        #firewall-cmd --zone=libvirt --remove-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
-        firewall-cmd --zone=$ZONE_EXT --remove-port=443/tcp --permanent
-        firewall-cmd --zone=$ZONE_EXT --remove-port=80/tcp --permanent
-        firewall-cmd --zone=$ZONE_EXT --remove-service=ocpapi --permanent
-        firewall-cmd --reload
-      when: kvm_firewall == "firewalld"
-
 
     - name: Remove NFS OCP dirs
       ignore_errors: yes
@@ -132,6 +58,81 @@
       tags: remove
       become: true
       block:
+
+        - name: Unpublish
+          when: kvm_configure  == "true"
+          tags: remove
+          become: true
+          block:
+            - name:  Unpublish
+              ignore_errors: yes
+              shell: |
+                set -x
+                # Unpublishing
+                if [ {{ compute.0.replicas }} -ne 0 ]
+                then
+                  API_VIP={{ ocp_api_vip }}
+                  APPS_VIP={{ ocp_apps_vip }}
+                else
+                  API_VIP={{ ocp_api_vip }}
+                  APPS_VIP={{ ocp_api_vip }}
+                fi
+                if [ {{ lb }} == "true" ]
+                then
+                  API_VIP={{ ocp_cluster_net_gw }}
+                  APPS_VIP={{ ocp_cluster_net_gw }}
+                fi
+                iptables -D INPUT -p tcp  --dport 6443 -j ACCEPT
+                iptables -D INPUT -p tcp  --dport 80 -j ACCEPT
+                iptables -D INPUT -p tcp  --dport 443 -j ACCEPT
+                iptables -D PREROUTING -t nat -i {{ kvm_interface }} -p tcp --dport 6443 -j DNAT --to $API_VIP:6443
+                iptables -D FORWARD -p tcp -d $API_VIP --dport 6443 -j ACCEPT
+                iptables -D PREROUTING -t nat -i {{ kvm_interface }} -p tcp --dport 443 -j DNAT --to $APPS_VIP:443
+                iptables -D FORWARD -p tcp -d $APPS_VIP --dport 443 -j ACCEPT
+                iptables -D PREROUTING -t nat -i {{ kvm_interface }} -p tcp --dport 80 -j DNAT --to $APPS_VIP:80
+                iptables -D FORWARD -p tcp -d $APPS_VIP --dport 80 -j ACCEPT
+                iptables -D FORWARD -i any -o any -j ACCEPT
+              when: kvm_firewall == "iptables"
+
+
+
+            - name: Configure Firewalld
+              become: true
+              ignore_errors: yes
+              shell: |
+                IFACE=$(nmcli con show "{{ kvm_interface }}" | grep connection.interface-name | awk '{print $2}')
+                ZONE_EXT=$(firewall-cmd --list-all-zones | grep -B 3 $IFACE | head -n 1 | awk '{print $1}')
+                # Publishing
+                if [ {{ compute.0.replicas }} -ne 0 ]
+                then
+                  API_VIP={{ ocp_api_vip }}
+                  APPS_VIP={{ ocp_apps_vip }}
+                else
+                  API_VIP={{ ocp_api_vip }}
+                  APPS_VIP={{ ocp_api_vip }}
+                fi
+                if [ {{ lb }} == "true" ]
+                then
+                  API_VIP={{ ocp_cluster_net_gw }}
+                  APPS_VIP={{ ocp_cluster_net_gw }}
+                fi
+                firewall-cmd --permanent --remove-forward-port=port=6443:proto=tcp:toport=6443:toaddr=$API_VIP --zone=$ZONE_EXT
+                firewall-cmd --permanent --remove-forward-port=port=443:proto=tcp:toport=443:toaddr=$APPS_VIP --zone=$ZONE_EXT
+                firewall-cmd --permanent --remove-forward-port=port=80:proto=tcp:toport=80:toaddr=$APPS_VIP --zone=$ZONE_EXT
+                firewall-cmd --zone=libvirt --remove-port=443/tcp --permanent
+                firewall-cmd --zone=libvirt --remove-port=80/tcp --permanent
+                firewall-cmd --zone=libvirt --remove-service=ocpapi --permanent
+                #firewall-cmd --zone=libvirt --remove-service=libvirt --permanent
+                #firewall-cmd --zone=libvirt --remove-service=nfs --permanent
+                #firewall-cmd --zone=libvirt --remove-service=dns --permanent
+                #firewall-cmd --zone=libvirt --remove-service=libvirttcp --permanent
+                #firewall-cmd --zone=libvirt --remove-rich-rule "rule family="ipv4" source address=0.0.0.0/0 accept"  --permanent
+                firewall-cmd --zone=$ZONE_EXT --remove-port=443/tcp --permanent
+                firewall-cmd --zone=$ZONE_EXT --remove-port=80/tcp --permanent
+                firewall-cmd --zone=$ZONE_EXT --remove-service=ocpapi --permanent
+                firewall-cmd --reload
+              when: kvm_firewall == "firewalld"
+
         - name: Remove Load Balancer
           #when: lb  == "true"
           become: true
