@@ -177,14 +177,10 @@
 #            dest: /etc/haproxy/haproxy.cfg
 
 
-        - name: Check existence of /etc/haproxy/haproxy.cfg
-          file:
-            path: /etc/haproxy/haproxy.cfg
-            state: present
-
         - name: Write out haproxy config file header
           blockinfile:
             path: /etc/haproxy/haproxy.cfg
+            create: yes
             insertbefore: BOF
             block: |
               global
