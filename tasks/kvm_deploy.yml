@@ -237,7 +237,8 @@
                   option tcplog
               frontend ingress-https
                   bind *:443
-                  default_backend default-ingress-securehttps
+#                  default_backend default-ingress-securehttps
+                  default_backend {{ metadata.name }}-ingress-https
                   mode tcp
                   option tcplog
               backend default-openshift-api-server
@@ -255,38 +256,23 @@
           ansible.builtin.lineinfile:
             path: /etc/haproxy/haproxy.cfg
             insertafter: '    default_backend default-openshift-api-server'
-            line: "    use_backend {{ metadata.name }}-openshift-api-server if url_api_{{ metadata.name }}"
-
-        - name: Create ACL in HAproxy frontend API
-          ansible.builtin.lineinfile:
-            path: /etc/haproxy/haproxy.cfg
-            insertafter: '    default_backend default-openshift-api-server'
-            line: "    acl url_api_{{ metadata.name }} hdr_sub(host) -i {{ metadata.name }}.{{ baseDomain }}"
+            line: "    use_backend {{ metadata.name }}-openshift-api-server if { hdr_sub(host) -i {{ metadata.name }}.{{ baseDomain }} }"
 
 
-        - name: Create ACL in HAproxy frontend HTTPS
-          ansible.builtin.lineinfile:
-            path: /etc/haproxy/haproxy.cfg
-            insertafter: '    default_backend default-ingress-securehttps'
-            line: "    use_backend {{ metadata.name }}-ingress-https if url_https_{{ metadata.name }}"
+# NOT WORKING
+#        - name: Create ACL in HAproxy frontend HTTPS
+#          ansible.builtin.lineinfile:
+#            path: /etc/haproxy/haproxy.cfg
+#            insertafter: '    default_backend default-ingress-securehttps'
+#            line: "    use_backend {{ metadata.name }}-ingress-https if { -i {{ metadata.name }}.{{ baseDomain }} }"
 
-        - name: Create ACL in HAproxy frontend HTTPS
-          ansible.builtin.lineinfile:
-            path: /etc/haproxy/haproxy.cfg
-            insertafter: '    default_backend default-ingress-securehttps'
-            line: "    acl url_https_{{ metadata.name }} hdr_sub(host) -i {{ metadata.name }}.{{ baseDomain }}"
 
         - name: Create ACL in HAproxy frontend HTTP
           ansible.builtin.lineinfile:
             path: /etc/haproxy/haproxy.cfg
             insertafter: '    default_backend default-ingress-http'
-            line: "    use_backend {{ metadata.name }}-ingress-http if url_http_{{ metadata.name }}"
+            line: "    use_backend {{ metadata.name }}-ingress-http if { hdr_sub(host) -i {{ metadata.name }}.{{ baseDomain }} }"
 
-        - name: Create ACL in HAproxy frontend HTTP
-          ansible.builtin.lineinfile:
-            path: /etc/haproxy/haproxy.cfg
-            insertafter: '    default_backend default-ingress-http'
-            line: "    acl url_http_{{ metadata.name }} hdr_sub(host) -i {{ metadata.name }}.{{ baseDomain }}"
 
         - name: Create backends haproxy file
           template:
