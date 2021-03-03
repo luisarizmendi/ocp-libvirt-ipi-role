@@ -228,6 +228,8 @@
               frontend openshift-api-server
                   bind *:6443
                   default_backend default-openshift-api-server
+                  tcp-request inspect-delay 5s
+                  tcp-request content accept if { req_ssl_hello_type 1 }
                   mode tcp
                   option tcplog
               frontend ingress-http
@@ -238,6 +240,8 @@
               frontend ingress-https
                   bind *:443
                   default_backend default-ingress-securehttps
+                  tcp-request inspect-delay 5s
+                  tcp-request content accept if { req_ssl_hello_type 1 }
                   mode tcp
                   option tcplog
               backend default-openshift-api-server
@@ -255,14 +259,14 @@
           ansible.builtin.lineinfile:
             path: /etc/haproxy/haproxy.cfg
             insertafter: '    default_backend default-openshift-api-server'
-            line: "    use_backend {{ metadata.name }}-openshift-api-server if { req.ssl_sni -m end .{{ metadata.name }}.{{ baseDomain }} }"
+            line: "    use_backend {{ metadata.name }}-openshift-api-server if { req.ssl_sni -m sub {{ metadata.name }}.{{ baseDomain }} }"
 
 
         - name: Create ACL in HAproxy frontend HTTPS
           ansible.builtin.lineinfile:
             path: /etc/haproxy/haproxy.cfg
             insertafter: '    default_backend default-ingress-securehttps'
-            line: "    use_backend {{ metadata.name }}-ingress-https if { req.ssl_sni -m end .{{ metadata.name }}.{{ baseDomain }} }"
+            line: "    use_backend {{ metadata.name }}-ingress-https if { req.ssl_sni -m sub {{ metadata.name }}.{{ baseDomain }} }"
 
 
         - name: Create ACL in HAproxy frontend HTTP
