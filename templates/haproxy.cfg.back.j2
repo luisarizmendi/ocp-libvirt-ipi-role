@@ -28,7 +28,7 @@ backend {{ metadata.name }}-ingress-https
     balance source
     mode tcp
 {% for w in range(0, nodes) %}
-    server {{ metadata.name }}-worker-https-router-{{ loop.index0 }} {{ ocp_apps_vip | ipmath( loop.index0 ) }}:443 check
+    server {{ metadata.name }}-worker-https-router-{{ loop.index0 }} {{ ocp_apps_vip | ipmath( loop.index0 ) }}:443 check sni req.ssl_sni
 {% endfor %}
 
 ######## {{ metadata.name }} END ########
