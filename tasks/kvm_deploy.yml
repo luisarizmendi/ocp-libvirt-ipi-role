@@ -238,7 +238,7 @@
               frontend ingress-https
                   bind *:443
 #                  default_backend default-ingress-securehttps
-                  default_backend {{ metadata.name }}-ingress-https
+                  default_backend ocp-ingress-https
                   mode tcp
                   option tcplog
               backend default-openshift-api-server
