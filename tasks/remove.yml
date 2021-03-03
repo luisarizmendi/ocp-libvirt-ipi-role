@@ -46,6 +46,7 @@
         sed -i "/use_backend {{ metadata.name }}/d" /etc/haproxy/haproxy.cfg
 
     - name: Remove HAPROXY backends config for this cluster
+      ignore_errors: yes
       blockinfile:
         path: /etc/haproxy/haproxy.cfg
         marker: "######## {{ metadata.name }} {mark} ########"
