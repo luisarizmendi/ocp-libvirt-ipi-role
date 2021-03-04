@@ -117,9 +117,9 @@
                   API_VIP={{ ocp_cluster_net_gw }}
                   APPS_VIP={{ ocp_cluster_net_gw }}
                 fi
-                firewall-cmd --permanent --remove-forward-port=port=6443:proto=tcp:toport=6443:toaddr=$API_VIP --zone=$ZONE_EXT
-                firewall-cmd --permanent --remove-forward-port=port=443:proto=tcp:toport=443:toaddr=$APPS_VIP --zone=$ZONE_EXT
-                firewall-cmd --permanent --remove-forward-port=port=80:proto=tcp:toport=80:toaddr=$APPS_VIP --zone=$ZONE_EXT
+                #firewall-cmd --permanent --remove-forward-port=port=6443:proto=tcp:toport=6443:toaddr=$API_VIP --zone=$ZONE_EXT
+                #firewall-cmd --permanent --remove-forward-port=port=443:proto=tcp:toport=443:toaddr=$APPS_VIP --zone=$ZONE_EXT
+                #firewall-cmd --permanent --remove-forward-port=port=80:proto=tcp:toport=80:toaddr=$APPS_VIP --zone=$ZONE_EXT
                 firewall-cmd --zone=libvirt --remove-port=443/tcp --permanent
                 firewall-cmd --zone=libvirt --remove-port=80/tcp --permanent
                 firewall-cmd --zone=libvirt --remove-service=ocpapi --permanent

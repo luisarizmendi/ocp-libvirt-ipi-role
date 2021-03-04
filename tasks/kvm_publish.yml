@@ -58,9 +58,9 @@
       firewall-cmd --zone=$ZONE_EXT --add-port=443/tcp --permanent
       firewall-cmd --zone=$ZONE_EXT --add-port=80/tcp --permanent
       firewall-cmd --zone=$ZONE_EXT --add-service=ocpapi --permanent
-      firewall-cmd --permanent --add-forward-port=port=6443:proto=tcp:toport=6443:toaddr=$API_VIP --zone=$ZONE_EXT
-      firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=443:toaddr=$APPS_VIP --zone=$ZONE_EXT
-      firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=80:toaddr=$APPS_VIP --zone=$ZONE_EXT
+      #firewall-cmd --permanent --add-forward-port=port=6443:proto=tcp:toport=6443:toaddr=$API_VIP --zone=$ZONE_EXT
+      #firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=443:toaddr=$APPS_VIP --zone=$ZONE_EXT
+      #firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=80:toaddr=$APPS_VIP --zone=$ZONE_EXT
       firewall-cmd --add-masquerade --zone=public --permanent
       firewall-cmd --reload
     when: kvm_firewall == "firewalld"
