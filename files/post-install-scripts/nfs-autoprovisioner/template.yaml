@@ -1,5 +1,5 @@
 kind: Template
-apiVersion: v1
+apiVersion: template.openshift.io/v1
 metadata:
   annotations:
     tags: nfsautoprovisioner
@@ -9,16 +9,23 @@ objects:
   apiVersion: v1
   metadata:
     name: "${NAMESPACE_NFS}"
-- kind: ServiceAccount
-  apiVersion: v1
+
+
+- apiVersion: v1
+  kind: ServiceAccount
   metadata:
     name: nfs-client-provisioner
+    # replace with namespace where provisioner is deployed
     namespace: "${NAMESPACE_NFS}"
+
 - kind: ClusterRole
   apiVersion: rbac.authorization.k8s.io/v1
   metadata:
     name: nfs-client-provisioner-runner
   rules:
+    - apiGroups: [""]
+      resources: ["nodes"]
+      verbs: ["get", "list", "watch"]
     - apiGroups: [""]
       resources: ["persistentvolumes"]
       verbs: ["get", "list", "watch", "create", "delete"]
@@ -31,6 +38,7 @@ objects:
     - apiGroups: [""]
       resources: ["events"]
       verbs: ["create", "update", "patch"]
+
 - kind: ClusterRoleBinding
   apiVersion: rbac.authorization.k8s.io/v1
   metadata:
@@ -38,37 +46,45 @@ objects:
   subjects:
     - kind: ServiceAccount
       name: nfs-client-provisioner
+      # replace with namespace where provisioner is deployed
       namespace: "${NAMESPACE_NFS}"
   roleRef:
     kind: ClusterRole
     name: nfs-client-provisioner-runner
     apiGroup: rbac.authorization.k8s.io
+
 - kind: Role
   apiVersion: rbac.authorization.k8s.io/v1
   metadata:
     name: leader-locking-nfs-client-provisioner
+    # replace with namespace where provisioner is deployed
     namespace: "${NAMESPACE_NFS}"
   rules:
     - apiGroups: [""]
       resources: ["endpoints"]
       verbs: ["get", "list", "watch", "create", "update", "patch"]
+
 - kind: RoleBinding
   apiVersion: rbac.authorization.k8s.io/v1
   metadata:
     name: leader-locking-nfs-client-provisioner
+    # replace with namespace where provisioner is deployed
     namespace: "${NAMESPACE_NFS}"
   subjects:
     - kind: ServiceAccount
       name: nfs-client-provisioner
+      # replace with namespace where provisioner is deployed
+      namespace: "${NAMESPACE_NFS}"
   roleRef:
     kind: Role
     name: leader-locking-nfs-client-provisioner
     apiGroup: rbac.authorization.k8s.io
+
 - kind: Deployment
   apiVersion: apps/v1
+  namespace: "${NAMESPACE_NFS}"
   metadata:
     name: nfs-client-provisioner
-    namespace: "${NAMESPACE_NFS}"
   spec:
     replicas: 1
     selector:
@@ -84,32 +100,34 @@ objects:
         serviceAccountName: nfs-client-provisioner
         containers:
           - name: nfs-client-provisioner
-            image: quay.io/external_storage/nfs-client-provisioner:latest
+            image: k8s.gcr.io/sig-storage/nfs-subdir-external-provisioner:v4.0.2
             volumeMounts:
               - name: nfs-client-root
                 mountPath: /persistentvolumes
             env:
               - name: PROVISIONER_NAME
-                value: "nfs-provisioner"
+                value: k8s-sigs.io/nfs-subdir-external-provisioner
               - name: NFS_SERVER
-                value: "${NFS_SERVER}"
+                value: ${NFS_SERVER}
               - name: NFS_PATH
-                value: "${NFS_PATH}"
+                value: ${NFS_PATH}
         volumes:
           - name: nfs-client-root
             nfs:
-              server: "${NFS_SERVER}"
-              path: "${NFS_PATH}"
+              server: ${NFS_SERVER}
+              path: ${NFS_PATH}
+
 - kind: StorageClass
   apiVersion: storage.k8s.io/v1
-
   metadata:
     name: managed-nfs-storage
-    annotations:
-      storageclass.kubernetes.io/is-default-class: "true"
-  provisioner: "nfs-provisioner"
+  provisioner: k8s-sigs.io/nfs-subdir-external-provisioner # or choose another name, must match deployment's env PROVISIONER_NAME'
   parameters:
-    archiveOnDelete: "false"
+    pathPattern: "${.PVC.namespace}/${.PVC.annotations.nfs.io/storage-path}" # waits for nfs.io/storage-path annotation, if not specified will accept as empty string.
+    onDelete: delete
+
+
+
 parameters:
   - name: NFS_SERVER
     displayName: NFS Server IP
