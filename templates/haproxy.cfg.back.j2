@@ -18,7 +18,7 @@ backend {{ metadata.name }}-openshift-api-server
 
 backend {{ metadata.name }}-ingress-http
     balance source
-    mode tcp
+    mode http
 {% for w in range(0, nodes) %}
     server {{ metadata.name }}-worker-http-router-{{ loop.index0 }} {{ ocp_apps_vip | ipmath( loop.index0 ) }}:80 check
 {% endfor %}
@@ -26,7 +26,7 @@ backend {{ metadata.name }}-ingress-http
 
 backend {{ metadata.name }}-ingress-https
     balance source
-    mode tcp
+    mode http
 {% for w in range(0, nodes) %}
     server {{ metadata.name }}-worker-https-router-{{ loop.index0 }} {{ ocp_apps_vip | ipmath( loop.index0 ) }}:443 check sni req.ssl_sni
 {% endfor %}
