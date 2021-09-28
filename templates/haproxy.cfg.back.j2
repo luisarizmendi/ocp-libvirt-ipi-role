@@ -3,7 +3,7 @@
 
 backend {{ metadata.name }}-openshift-api-server
     balance source
-    mode tcp
+    mode http
 {% for m in range(0, controlPlane.replicas) %}
     server {{ metadata.name }}-master-{{ loop.index0 }} {{ ocp_api_vip |ipmath( loop.index0 ) }}:6443 check
 {% endfor %}
