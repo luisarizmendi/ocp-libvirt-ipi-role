@@ -31,7 +31,7 @@ For Fedora 34 if you already have HAProxy installed then ensure there is no /etc
 Before starting the installation ensure your firewall has opened ports 80 and 443 for the active zone (by default in Fedora 34 only ports above 1024 are opened).
 It is also recommended to explicitly provide the kvm_workdir as parameter to the ansible-playbook command along with the sudo password.
 
-The [eartvit-fork](https://github.com/eartvit/ocp-libvirt-ipi-role "fedora34 fork") is completely configured for Fedora 34/RHEL 8 execution.
+The [fedora34-branch](https://github.com/eartvit/ocp-libvirt-ipi-role/tree/fedora34 "fedora34 branch") is completely configured for Fedora 34/RHEL 8 execution.
 
 If you use the [luisarizmendi](https://github.com/luisarizmendi/ocp-libvirt-ipi-role "luisarizmendi original") repository version you need to ensure that:
 * In kvm_deploy.yml task:
