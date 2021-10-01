@@ -232,29 +232,29 @@
                   default_backend default-openshift-api-server
                   tcp-request inspect-delay 5s
                   tcp-request content accept if { req_ssl_hello_type 1 }
-                  mode tcp
+                  mode http
                   option tcplog
               frontend ingress-http
                   bind *:80
                   default_backend default-ingress-http
-                  mode tcp
+                  mode http
                   option tcplog
               frontend ingress-https
                   bind *:443
                   default_backend default-ingress-securehttps
                   tcp-request inspect-delay 5s
                   tcp-request content accept if { req_ssl_hello_type 1 }
-                  mode tcp
+                  mode http
                   option tcplog
               backend default-openshift-api-server
                   balance source
-                  mode tcp
+                  mode http
               backend default-ingress-http
                   balance source
-                  mode tcp
+                  mode http
               backend default-ingress-securehttps
                   balance source
-                  mode tcp
+                  mode http
 
 
         - name: Create ACL in HAproxy frontend API
