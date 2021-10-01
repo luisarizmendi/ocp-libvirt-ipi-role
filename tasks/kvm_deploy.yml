@@ -181,6 +181,8 @@
           shell: "IFADDR=$(nmcli con show '{{ kvm_interface }}' | grep ipv4.addresses | awk -F ':                         ' '{print $2}' | awk -F / '{print $1}') ; echo $IFADDR"
           register: publicaddress
 
+        - name: Remove the haproxy.conf if it's the default one
+          shell: "if grep 'Example configuration for a possible web application' /etc/haproxy/haproxy.cfg  ; then     rm -f /etc/haproxy/haproxy.cfg ; fi"
 
         - stat:
             path: /etc/haproxy/haproxy.cfg
