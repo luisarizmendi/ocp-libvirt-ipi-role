@@ -6,6 +6,7 @@
 - name: Compile OpenShift installer (libvirt is in development)
   when: ocp_prepare == "true"
   tags: install
+  become: true
   module_defaults:
     shell:
       chdir: "{{ kvm_workdir }}"
@@ -85,6 +86,7 @@
 - name: Prepare OpenShift installation
   when: ocp_prepare == "true"
   tags: install
+  become: true
   environment:
     GOPATH: "{{ kvm_workdir }}/go"
     GOCACHE: "{{ kvm_workdir }}/go-build"
@@ -158,6 +160,7 @@
 - name: Install OpenShift
   when: ocp_install == "true"
   tags: install
+  become: true
   environment:
     GOPATH: "{{ kvm_workdir }}/go"
     GOCACHE: "{{ kvm_workdir }}/go-build"
@@ -237,6 +240,7 @@
 - name: OpenShift Post-Install
   when: ocp_install == "true"
   tags: install
+  become: true
   environment:
     GOPATH: "{{ kvm_workdir }}/go"
     GOCACHE: "{{ kvm_workdir }}/go-build"

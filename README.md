@@ -6,6 +6,8 @@ Deploy OpenShift 4 on a CentOS/RHEL 7/8 or Fedora KVM using libvirt IPI
 Requirements
 ------------
 
+### General notes ###
+
 CentOS/RHEL 7/8 or Fedora (tested in Fedora 31) host, the one included in the inventory file and that will host and launch the OpenShift cluster.
 
 Subscriptions active in case of RHEL
@@ -21,6 +23,29 @@ You need to prepare the install-config.yaml file, including:
 * Public SSH key
 * Number of masters (1 or 3) and workers (0,1,2...or more)
 
+### Fedora 34 Notes ###
+
+Tested on Fedora 34 with Openshift 4.7.8 (then upgraded internally the cluster to 4.7.31) using 3 master nodes and 0 worker configuration.
+
+For Fedora 34 if you already have HAProxy installed then ensure there is no /etc/haproxy/haproxy.cfg file. I recommend renameming it to something else in case you want to add your additional configuration back at the end of the OpenShift installation (the installer will create a completely new file with everything needed for OpenShift).
+Before starting the installation ensure your firewall has opened ports 80 and 443 for the active zone (by default in Fedora 34 only ports above 1024 are opened).
+It is also recommended to explicitly provide the kvm_workdir as parameter to the ansible-playbook command along with the sudo password.
+
+The [fedora34-branch](https://github.com/eartvit/ocp-libvirt-ipi-role/tree/fedora34 "fedora34 branch") is completely configured for Fedora 34/RHEL 8 execution.
+
+If you use the [luisarizmendi](https://github.com/luisarizmendi/ocp-libvirt-ipi-role "luisarizmendi original") repository version you need to ensure that:
+* In kvm_deploy.yml task:
+  * Elevate taks "Create Initial required directory as {{ kvm_workdir }}" to root
+  * Change the destination of the template file for task name: "Create backends haproxy file" to be /etc/haproxy/haproxy.cfg.back.tmp
+    * Subsequently update dependent task named "Create haproxy file" to use the file location specified in the earlier step: cat /etc/haproxy/haproxy.cfg.back.tmp >> /etc/haproxy/haproxy.cfg
+  * Comment our task and steps related to NFS for RHEL7 named "Set user and group for NFS nobody ( Fedora/Centos/RHEL 7 )" as only Fedora 34 and RHEL 8 must be set for nfs_user and nfs_group in this file
+* In ocp_deploy.yml elevate to root the following tasks:
+  * Compile OpenShift installer (libvirt is in development)
+  * Prepare OpenShift installation
+  * Install OpenShift
+  * OpenShift Post-Install
+
+### Example ###
 
 This is a template example:
 
