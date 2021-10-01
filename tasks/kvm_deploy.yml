@@ -3,6 +3,7 @@
 #
 - name: Create Initial required directory as {{ kvm_workdir }}
   when: kvm_install == "true" or kvm_install == "minimal"
+  become: true
   tags: install
   file:
     path: "{{ item }}"
@@ -281,7 +282,7 @@
         - name: Create backends haproxy file
           template:
             src: haproxy.cfg.back.j2
-            dest: haproxy.cfg.back.tmp
+            dest: /etc/haproxy/haproxy.cfg.back.tmp
 
 
         - name: Remove HAPROXY backends config for this cluster
@@ -293,7 +294,7 @@
 
         - name: Create haproxy file
           shell: |
-            cat haproxy.cfg.back.tmp >> /etc/haproxy/haproxy.cfg
+            cat /etc/haproxy/haproxy.cfg.back.tmp >> /etc/haproxy/haproxy.cfg
 
 
         - name: Remove temp file for haproxy config
@@ -332,10 +333,10 @@
         nfs_user: "nobody"
         nfs_group: "nobody"
 
-    - name: Set user and group for NFS nobody ( Fedora/Centos/RHEL 7 )
-      set_fact:
-        nfs_user: "nfsnobody"
-        nfs_group: "nfsnobody"
+#    - name: Set user and group for NFS nobody ( Fedora/Centos/RHEL 7 )
+#      set_fact:
+#        nfs_user: "nfsnobody"
+#        nfs_group: "nfsnobody"
 
     - name: Create mountable dirs ( Fedora / CentOS / RHEL )
       when: ansible_distribution == "Fedora" or
