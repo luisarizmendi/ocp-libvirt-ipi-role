@@ -10,6 +10,12 @@ Requirements
 
 CentOS/RHEL 7/8 or Fedora (tested in Fedora 31) host, the one included in the inventory file and that will host and launch the OpenShift cluster.
 
+Ansible installed, including the netapp modules. These playbooks install python3-netaddr which it was enough in previous CentOS versions, but now the ipaddr() filter was migrated to the ansible.netcommon collection so you should install that one too in, for example, CentOS Stream with command
+
+```
+ansible-galaxy collection install ansible.netcommon
+```
+
 Subscriptions active in case of RHEL
 
 It has been tested with OpenShift 4.4 (I'm not sure about backwards compatibility)

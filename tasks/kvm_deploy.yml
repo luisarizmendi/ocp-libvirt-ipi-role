@@ -83,7 +83,6 @@
           - qemu-kvm
           - NetworkManager
           - python3-netaddr
-          - python3-jinja2
           - unzip
           - tar
         state: present
